@@ -1,6 +1,7 @@
+
 <script setup>
 import Navbar from './components/Navbar.vue';
-
+import Sidebar from './components/Sidebar.vue';
 
 </script>
 
@@ -9,6 +10,10 @@ import Navbar from './components/Navbar.vue';
     <Navbar/>
     </header>
 
+   <aside class="p-4 pt-24  overflow-y-auto z-40 ">
+        <Sidebar/>
+    </aside>
+    
 </template>
 
 <style scoped>

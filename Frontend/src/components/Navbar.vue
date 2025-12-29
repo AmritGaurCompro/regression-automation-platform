@@ -11,6 +11,7 @@ import Input from './ui/input/Input.vue';
 import {  Search } from 'lucide-vue-next';
 import Button from './ui/button/Button.vue';
 import Separator from './ui/separator/Separator.vue';
+import { searchQuery } from '@/utils/SelectedTestInfo';
 
 </script>
 
@@ -34,13 +35,13 @@ import Separator from './ui/separator/Separator.vue';
             
             <div class="mt-2 relative flex items-center w-11/12 lg:w-5/12 px-3">
                 <Search class="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input placeholder="Search by name, tag, or environment..." class="flex flex-1 pl-10 p-5 px-9 bg-[#161b26] focus:bg-gray-800" />
+                <Input v-model="searchQuery" placeholder="Search by name, tag, or environment..." class="flex flex-1 pl-10 p-5 px-9 bg-[#161b26] focus:bg-gray-800" />
             </div>
 
             <div class="lg:mr-3">
-                <Button class="bg-red-500 m-3 px-3 py-5 rounded-md hover:bg-red-600 ocus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white animate-pulse transition-all duration-200 ease-out
+                <Button class="bg-red-500 m-3 px-3 py-5 rounded-md hover:bg-red-600 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white animate-pulse transition-all duration-200 ease-out
     hover:-translate-y-0.5 focus-visible:-translate-y-0.5 ">● Record New</Button>
-                <Button class="px-3 py-5 rounded-md ocus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white hover:-translate-y-0.5 focus-visible:-translate-y-0.5">📥 Import</Button>
+                <Button class="px-3 py-5 rounded-md focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white hover:-translate-y-0.5 focus-visible:-translate-y-0.5">📥 Import</Button>
             </div>
         </div>
      
