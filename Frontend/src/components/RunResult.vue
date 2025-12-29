@@ -7,19 +7,18 @@ import ErrorLog from "./ErrorLog.vue"
 import Artifacts from "./Artifacts.vue"
 import RunHistory from "./RunHistory.vue"
 import { Card, CardHeader, CardContent } from "@/components/ui/card"    
-
-
+import { selectedTest } from "@/utils/SelectedTestInfo" 
+import { ref } from "vue"
 const runs = [
   { id: "#128", status: "fail", environment: "QA", duration: "41s" },
   { id: "#127", status: "pass", environment: "QA", duration: "29s" },
   { id: "#125", status: "pass", environment: "DEV", duration: "33s" },
   { id: "#122", status: "fail", environment: "DEV", duration: "47s" },
 ] 
+
+
 const runResult = reactive({
-  status: "failed",
   id: "#128",
-  time: "Dec 16, 2025 at 11:06 AM",
-  environment: "QA",
   duration: "41s",
   startedAt: "11:05:22",
   finishedAt: "11:06:03",
@@ -44,20 +43,22 @@ Next steps:
 </script>
 
 <template>
-  <div class="px-6">
+  <div class="
+ w-full px-4 lg:ml-[25%] lg:w-[75%]">
     <RunResultHeader />
     <div
       class="border border-slate-800
-             bg-gradient-to-b from-slate-900 to-slate-950
+            bg-[#161b26]
              p-6 space-y-6"
     >
       <RunResultStatus
-        :status="runResult.status"
+        :status=selectedTest.status
         :run-id="runResult.id"
-        :run-time="runResult.time"
+        :run-time=selectedTest.lastRun
       />
+   
       <RunResultMeta
-        :environment="runResult.environment"
+        :environment=selectedTest.environment
         :duration="runResult.duration"
         :started-at="runResult.startedAt"
         :finished-at="runResult.finishedAt"

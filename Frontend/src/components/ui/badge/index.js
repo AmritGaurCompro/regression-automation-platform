@@ -12,10 +12,7 @@ export const badgeVariants = cva(
         secondary:
           "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive:
-          "border-red-800 bg-red-900 text-red-300",
-        success: "border-emerald-700 bg-emerald-900 text-emerald-300",
-        info: 
-          "border-indigo-500/30 bg-indigo-500/15 text-indigo-400",
+          "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
         outline: "text-foreground",
       },
     },

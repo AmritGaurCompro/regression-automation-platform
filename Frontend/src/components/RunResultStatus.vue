@@ -1,7 +1,6 @@
 <script setup>
 import { computed } from "vue"
 import { Badge } from "@/components/ui/badge"
-
 const props = defineProps({
   status: {
     type: String,
@@ -10,7 +9,7 @@ const props = defineProps({
   runId: String,
   runTime: String,
 })
-const isPassed = computed(() => props.status === "passed")
+const isPassed = computed(() => props.status === "PASS")
 const containerClasses = computed(() =>
   isPassed.value
     ? "border-emerald-600/40 from-emerald-900/40 to-emerald-950"
@@ -37,7 +36,7 @@ const containerClasses = computed(() =>
       </div>
       <div>
         <h3 class="text-lg font-semibold text-white">
-          {{ isPassed ? "Test Passed" : "Test Failed" }}
+          {{ isPassed ? "Test Passed" : status=="FAIL" ? "Test Failed" : "Not Run Yet"   }}
         </h3>
         <p class="text-sm text-slate-400">
           Run {{ runId }} • {{ runTime }}
@@ -45,10 +44,13 @@ const containerClasses = computed(() =>
       </div>
     </div>
     <Badge
-      :variant="isPassed ? 'success' : 'destructive'"
+    :class="{
+        'bg-emerald-600' : isPassed,
+        'bg-red-600': !isPassed
+    }"
       class="uppercase tracking-wide self-start sm:self-auto"
     >
-      {{ isPassed ? "PASSED" : "FAILED" }}
+      {{ isPassed ? "PASSED" : status=="FAIL" ? "Failed" : "Pending" }}
     </Badge>
   </div>
 </template>

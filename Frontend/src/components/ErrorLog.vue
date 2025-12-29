@@ -30,8 +30,8 @@ const props = defineProps({
       </CardTitle>
 
       <Badge
-        variant="destructive"
-        class="uppercase tracking-wide"
+
+        class="uppercase tracking-wide bg-red-600"
       >
         {{ error.type }}
       </Badge>

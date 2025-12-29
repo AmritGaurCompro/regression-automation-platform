@@ -15,7 +15,8 @@ defineProps({
 <template>
   <Card
     class="border-slate-800
-           bg-gradient-to-b from-slate-900 to-slate-950"
+           bg-[#1c2333]
+"
   >
     <CardHeader class="pb-2">
       <CardTitle

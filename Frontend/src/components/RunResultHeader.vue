@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button"
 
 <template>
   <div
-    class="rounded-t-xl bg-gradient-to-b from-slate-900 to-slate-950
+    class="rounded-t-xl 
            border border-slate-800 px-6 py-5
-           flex items-center justify-between"
+           flex items-center justify-between bg-[#1c2333]
+"
   >
     <div>
       <h2 class="text-xl font-semibold text-white">

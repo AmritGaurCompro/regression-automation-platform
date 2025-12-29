@@ -11,7 +11,8 @@ defineProps({
 <template>
   <div
     class="flex flex-col gap-4 rounded-xl
-           bg-slate-900/60 border border-slate-800
+       bg-[#1c2333]
+    border border-slate-800
            px-6 py-5 sm:flex-row sm:items-center sm:justify-between"
   >
     <div class="flex items-center gap-4">

@@ -15,8 +15,6 @@ defineProps({
   },
 })
 
-const statusVariant = (status) =>
-  status === "pass" ? "success" : "destructive"
 </script>
 
 <template>
@@ -43,7 +41,8 @@ const statusVariant = (status) =>
         class="hidden md:grid grid-cols-4 px-6 py-3
                text-xs font-semibold uppercase
                text-slate-400
-               border-b border-slate-800"
+               border-b border-slate-800 bg-[#1c2333]
+"
       >
         <span>Run ID</span>
         <span>Status</span>
@@ -64,7 +63,10 @@ const statusVariant = (status) =>
             {{ run.id }}
           </span>
 
-          <Badge :variant="statusVariant(run.status)" class="w-fit">
+          <Badge     :class="{
+        'bg-emerald-600' : run.status === 'pass',
+        'bg-red-600': run.status === 'fail'
+    }" class="w-fit">
             {{ run.status.toUpperCase() }}
           </Badge>
 
@@ -82,7 +84,10 @@ const statusVariant = (status) =>
               {{ run.id }}
             </span>
 
-            <Badge :variant="statusVariant(run.status)">
+            <Badge :class="{
+        'bg-emerald-600' : run.status === 'pass',
+        'bg-red-600': run.status === 'fail'
+    }" >
               {{ run.status.toUpperCase() }}
             </Badge>
           </div>
