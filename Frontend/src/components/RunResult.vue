@@ -44,7 +44,7 @@ Next steps:
 
 <template>
   <div class="
- w-full px-4 lg:ml-[25%] lg:w-[75%]">
+ w-full lg:w-[100%] ">
     <RunResultHeader />
     <div
       class="border border-slate-800
