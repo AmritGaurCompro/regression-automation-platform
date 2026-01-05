@@ -1,9 +1,9 @@
 <template>
   <div
-    class="flex flex-col lg:flex-row ml-5 gap-4 bg-[#161b26]"
+    class="flex flex-col lg:flex-row mt-0 ml-5 mr-5 gap-4 bg-[#161b26]"
   >
     <!-- Environment -->
-    <div>
+    <div class="w-full lg:w-64">
       <label class="mb-1 block text-xs font-medium text-muted-foreground">
         ENVIRONMENT
       </label>
@@ -23,7 +23,7 @@
     </div>
 
     <!-- Runner Mode -->
-    <div>
+    <div class="w-full lg:w-64">
       <label class="mb-1 block text-xs font-medium text-muted-foreground">
         RUNNER MODE
       </label>
@@ -38,7 +38,7 @@
     </div>
 
     <!-- Tags -->
-    <div>
+    <div class="w-full lg:w-64">
       <label class="mb-1 block text-xs font-medium text-muted-foreground">
         TAGS
       </label>
@@ -52,7 +52,7 @@
     </div>
 
     <!-- Retries -->
-    <div>
+    <div class="w-full lg:w-64">
       <label class="mb-1 block text-xs font-medium text-muted-foreground">
         RETRIES ON FAILURE
       </label>

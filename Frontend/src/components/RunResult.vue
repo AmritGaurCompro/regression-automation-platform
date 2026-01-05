@@ -45,7 +45,7 @@ Next steps:
 <template>
   <div class="
  w-full lg:w-[100%] ">
-    <RunResultHeader />
+    <RunResultHeader :title="selectedTest.title"/>
     <div
       class="border border-slate-800
             bg-[#161b26]

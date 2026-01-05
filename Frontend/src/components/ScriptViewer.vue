@@ -79,16 +79,21 @@
     </div>
   </div>
 
-  <Card
-    class="ml-4 mr-4 px-2 bg-[#0d1117] border-l-[3px] border-l-[#6366f1]
-           border-r-transparent border-b-transparent border-t-transparent rounded-lg"
-  >
-    <CardHeader class="p-4">
-      <CardDescription class="text-xs text-[#64748b] leading-5">
-        💡 <span class="font-semibold">Normalization rules:</span> Hardcoded URLs → baseURL from config • Passwords → process.env.TEST_PASSWORD • Enable trace & screenshots on failure
-      </CardDescription>
-    </CardHeader>
-  </Card>
+<Card
+  v-if="activeTab === 'normalized'"
+  class="ml-4 mr-4 mt-4 px-2 bg-[#0d1117] border-l-[3px] border-l-[#6366f1]
+         border-r-transparent border-b-transparent border-t-transparent rounded-lg"
+>
+  <CardHeader class="p-4">
+    <CardDescription class="text-xs text-[#64748b] leading-5">
+      💡 <span class="font-semibold">Normalization rules:</span>
+      Hardcoded URLs → baseURL from config •
+      Passwords → process.env.TEST_PASSWORD •
+      Enable trace & screenshots on failure
+    </CardDescription>
+  </CardHeader>
+</Card>
+
 </template>
 
 <script setup>

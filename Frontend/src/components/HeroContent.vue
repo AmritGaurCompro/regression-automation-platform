@@ -40,7 +40,7 @@ const handleRunTest = () => {
 </script>
 
 <template>
-  <div class="w-full lg:ml-10 lg:w-[75%] rounded-xl space-y-6 bg-[#161b26]">
+  <div class="w-full mt-5 lg:mt-0 lg:ml-10 lg:w-[75%] rounded-xl space-y-6 bg-[#161b26]">
     <HeadingBar
       v-if="selectedTest"
       :title="selectedTest.title"
