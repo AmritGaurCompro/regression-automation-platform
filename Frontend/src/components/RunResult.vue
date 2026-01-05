@@ -44,8 +44,8 @@ Next steps:
 
 <template>
   <div class="
- w-full px-4 lg:ml-[25%] lg:w-[75%]">
-    <RunResultHeader />
+ w-full lg:w-[100%] ">
+    <RunResultHeader :title="selectedTest.title"/>
     <div
       class="border border-slate-800
             bg-[#161b26]

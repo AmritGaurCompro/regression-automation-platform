@@ -1,5 +1,11 @@
 <script setup>
 import { Button } from "@/components/ui/button"
+defineProps({
+  title: {
+    type: String,
+    required: true
+  }
+})
 </script>
 
 <template>
@@ -16,7 +22,7 @@ import { Button } from "@/components/ui/button"
       <p class="text-sm text-slate-400 mt-1">
         Results for:
         <span class="text-slate-300">
-          Login → Dashboard loads
+          {{ title }}
         </span>
       </p>
     </div>
