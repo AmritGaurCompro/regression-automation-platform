@@ -31,7 +31,7 @@
 </template>
 
 <script>
-import { useTestStore } from '@/stores/testStore'
+import { useTestOperations } from '@/composables/useTestOperations'
 
 export default {
   name: 'HeadingBar',
@@ -43,26 +43,10 @@ export default {
   },
 
   setup() {
-    const testStore = useTestStore()
-    return { testStore }
-  },
+    const { runSelectedTest } = useTestOperations()
 
-  methods: {
-    runTest() {
-      const { selectedTest } = this.testStore
-
-      if (!selectedTest) return
-
-      selectedTest.lastRun = new Intl.DateTimeFormat('en-US', {
-        month: 'short',
-        day: '2-digit',
-        year: 'numeric',
-      }).format(new Date()) + ' • ' +
-        new Intl.DateTimeFormat('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true,
-        }).format(new Date())
+    return {
+      runTest: runSelectedTest
     }
   }
 }
