@@ -6,7 +6,6 @@
            display="flex"
            
   >
-    <!-- Left: Title + Meta -->
     <div>
       <h1 class="text-xl font-bold text-white">
         {{ title }}
@@ -19,7 +18,6 @@
       </p>
     </div>
 
-    <!-- Right: Actions -->
     <div class="flex items-center gap-3">
           <button
   class="rounded-md border px-3 py-3 text-sm hover:bg-muted bg-[#10b981]"
@@ -33,7 +31,7 @@
 </template>
 
 <script>
-import { selectedTest } from '@/utils/SelectedTestInfo'
+import { useTestStore } from '@/stores/testStore'
 
 export default {
   name: 'HeadingBar',
@@ -44,21 +42,28 @@ export default {
     environment: String
   },
 
+  setup() {
+    const testStore = useTestStore()
+    return { testStore }
+  },
+
   methods: {
     runTest() {
-      if (!selectedTest.value) return
+      const { selectedTest } = this.testStore
 
-      selectedTest.value.lastRun = new Intl.DateTimeFormat('en-US', {
+      if (!selectedTest) return
+
+      selectedTest.lastRun = new Intl.DateTimeFormat('en-US', {
         month: 'short',
         day: '2-digit',
         year: 'numeric',
-      }).format(new Date())+ ' • ' +
-    new Intl.DateTimeFormat('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    }).format(new Date())
-   }
+      }).format(new Date()) + ' • ' +
+        new Intl.DateTimeFormat('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        }).format(new Date())
+    }
   }
 }
 </script>

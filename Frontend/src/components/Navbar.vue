@@ -11,7 +11,11 @@ import Input from './ui/input/Input.vue';
 import {  Search } from 'lucide-vue-next';
 import Button from './ui/button/Button.vue';
 import Separator from './ui/separator/Separator.vue';
-import { searchQuery } from '@/utils/SelectedTestInfo';
+import { useTestStore } from '@/stores/testStore';
+import { storeToRefs } from 'pinia';
+
+const testStore = useTestStore();
+const { searchQuery } = storeToRefs(testStore);
 
 </script>
 

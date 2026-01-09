@@ -7,8 +7,13 @@ import ErrorLog from "./ErrorLog.vue"
 import Artifacts from "./Artifacts.vue"
 import RunHistory from "./RunHistory.vue"
 import { Card, CardHeader, CardContent } from "@/components/ui/card"    
-import { selectedTest } from "@/utils/SelectedTestInfo" 
+import { useTestStore } from '@/stores/testStore'
+import { storeToRefs } from 'pinia'
 import { ref } from "vue"
+
+const testStore = useTestStore()
+const { selectedTest } = storeToRefs(testStore)
+
 const runs = [
   { id: "#128", status: "fail", environment: "QA", duration: "41s" },
   { id: "#127", status: "pass", environment: "QA", duration: "29s" },

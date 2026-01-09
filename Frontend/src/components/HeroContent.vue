@@ -1,13 +1,16 @@
 <script setup>
 import { computed } from 'vue'
-import { selectedTest } from '@/utils/SelectedTestInfo'
+import { useTestStore } from '@/stores/testStore'
+import { storeToRefs } from 'pinia'
 
 import HeadingBar from '@/components/HeadingBar.vue'
 import TestData from '@/components/TestData.vue'
 import ScriptViewer from '@/components/ScriptViewer.vue'
 import RunResult from '@/components/RunResult.vue'
 
-/* Derived state from selectedTest */
+const testStore = useTestStore()
+const { selectedTest } = storeToRefs(testStore)
+
 const environment = computed({
   get: () => selectedTest.value?.environment || '',
   set: val => (selectedTest.value.environment = val)

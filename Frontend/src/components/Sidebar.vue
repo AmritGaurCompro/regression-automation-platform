@@ -12,8 +12,12 @@ import PassFailCountCard from './PassFailCountCard.vue';
 import TestCard from './TestCard.vue';
 import { computed, ref } from 'vue';
 import InformationalTip from './InformationalTip.vue';
-import { selectedTest, searchQuery } from '@/utils/SelectedTestInfo';
+import { useTestStore } from '@/stores/testStore';
+import { storeToRefs } from 'pinia';
 import test from 'node:test';
+
+const testStore = useTestStore();
+const { selectedTest, searchQuery } = storeToRefs(testStore);
 function formatDate(date) {
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
@@ -57,7 +61,7 @@ let testsDesc=ref([
     }
 ])
 
-selectedTest.value = testsDesc.value[0] || null;
+testStore.setSelectedTest(testsDesc.value[0] || null);
 
 const filteredTests = computed(() => {
   if (!searchQuery.value.trim()) {
@@ -89,7 +93,6 @@ const notRunCnt = computed(() =>
 
 let runTest=(ind)=>{
     testsDesc.value[ind].lastRun=formatDate(new Date());
-    // testsDesc.value[ind].status="PASS";
 }
 
 </script>
