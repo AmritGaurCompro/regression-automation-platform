@@ -3,9 +3,8 @@
     class="flex items-center justify-between
            rounded-lg bg-[#1c2333] border border-slate-800
            px-6 py-4"
-           display="flex"
-           
   >
+    <!-- Left: Title + Meta -->
     <div>
       <h1 class="text-xl font-bold text-white">
         {{ title }}
@@ -18,36 +17,46 @@
       </p>
     </div>
 
+    <!-- Right: Actions -->
     <div class="flex items-center gap-3">
-          <button
-  class="rounded-md border px-3 py-3 text-sm hover:bg-muted bg-[#10b981]"
-  @click="runTest"
->
-  ▶ Run Test
-</button>
-        
+      <button
+        class="rounded-md border px-3 py-3 text-sm hover:bg-muted bg-[#10b981]"
+        @click="runTest"
+      >
+        ▶ Run Test
+      </button>
     </div>
   </div>
 </template>
 
-<script>
-import { useTestOperations } from '@/composables/useTestOperations'
+<script setup>
+import { useTestStore } from '@/stores/testStore'
+import { computed } from 'vue'
 
-export default {
-  name: 'HeadingBar',
+const props = defineProps({
+  title: String,
+  tags: Array,
+  environment: String
+})
 
-  props: {
-    title: String,
-    tags: Array,
-    environment: String
-  },
+const testStore = useTestStore()
 
-  setup() {
-    const { runSelectedTest } = useTestOperations()
+const runTest = () => {
+  const selectedTest = testStore.selectedTest
 
-    return {
-      runTest: runSelectedTest
-    }
-  }
+  if (!selectedTest) return
+
+  selectedTest.lastRun =
+    new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric'
+    }).format(new Date()) +
+    ' • ' +
+    new Intl.DateTimeFormat('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }).format(new Date())
 }
 </script>

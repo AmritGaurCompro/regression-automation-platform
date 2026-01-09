@@ -10,7 +10,7 @@
       <select
         class="w-full rounded-lg bg-background px-3 py-2 text-sm"
         :value="environment"
-        @change="$emit('update:environment', $event.target.value)"
+        @change="emit('update:environment', $event.target.value)"
       >
         <option
           v-for="env in environments"
@@ -30,7 +30,7 @@
       <select
         class="w-full rounded-lg bg-background px-3 py-2 text-sm"
         :value="runnerMode"
-        @change="$emit('update:runnerMode', $event.target.value)"
+        @change="emit('update:runnerMode', $event.target.value)"
       >
         <option value="headless">Headless (default)</option>
         <option value="headed">Headed</option>
@@ -47,7 +47,7 @@
         placeholder="smoke, login, core"
         class="w-full rounded-lg bg-background px-3 py-2 text-sm"
         :value="tags"
-        @input="$emit('update:tags', $event.target.value)"
+        @input="emit('update:tags', $event.target.value)"
       />
     </div>
 
@@ -59,7 +59,7 @@
       <select
         class="w-full rounded-lg bg-background px-3 py-2 text-sm"
         :value="retries"
-        @change="$emit('update:retries', Number($event.target.value))"
+        @change="emit('update:retries', Number($event.target.value))"
       >
         <option v-for="n in 5" :key="n" :value="n - 1">
           {{ n - 1 }}
@@ -69,20 +69,22 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'TestData',
-
-  props: {
-    environment: String,
-    runnerMode: String,
-    tags: String,
-    retries: Number,
-    environments: {
-      type: Array,
-      default: () => []
-    }
+<script setup>
+defineProps({
+  environment: String,
+  runnerMode: String,
+  tags: String,
+  retries: Number,
+  environments: {
+    type: Array,
+    default: () => []
   }
-}
-</script>
+})
 
+const emit = defineEmits([
+  'update:environment',
+  'update:runnerMode',
+  'update:tags',
+  'update:retries'
+])
+</script>
