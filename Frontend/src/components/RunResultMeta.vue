@@ -2,7 +2,10 @@
 import MetaCard from "./MetaCard.vue"
 
 defineProps({
-  environment: String,
+  environment: {
+    type: String,
+    required: true 
+  },
   duration: String,
   startedAt: String,
   finishedAt: String,

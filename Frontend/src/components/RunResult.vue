@@ -13,7 +13,8 @@ import { ref } from "vue"
 
 const testStore = useTestStore()
 const { selectedTest } = storeToRefs(testStore)
-
+const loading = ref(false)
+const fetchError = ref(null)
 const runs = [
   { id: "#128", status: "fail", environment: "QA", duration: "41s" },
   { id: "#127", status: "pass", environment: "QA", duration: "29s" },

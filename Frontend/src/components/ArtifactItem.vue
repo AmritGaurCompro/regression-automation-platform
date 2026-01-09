@@ -2,9 +2,18 @@
 import { Button } from "@/components/ui/button"
 
 defineProps({
-  title: String,
-  path: String,
-  icon: String,
+  title: {
+    type: String,
+    required: true
+  },
+  path: {
+    type: String,
+    required: true
+  },
+  icon: {
+    type: String,
+    required: true
+  }
 })
 </script>
 

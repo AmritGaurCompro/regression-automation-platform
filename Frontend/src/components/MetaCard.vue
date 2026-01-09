@@ -7,8 +7,14 @@ import {
 } from "@/components/ui/card"
 
 defineProps({
-  label: String,
-  value: String,
+  label: {
+    type: String,
+    required: true
+  },
+  value: {
+    type: String,
+    required: true
+  }
 })
 </script>
 
