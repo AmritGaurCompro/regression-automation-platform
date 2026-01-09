@@ -10,26 +10,17 @@ import {
 import Separator from './ui/separator/Separator.vue';
 import PassFailCountCard from './PassFailCountCard.vue';
 import TestCard from './TestCard.vue';
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import InformationalTip from './InformationalTip.vue';
 import { useTestStore } from '@/stores/testStore';
 import { storeToRefs } from 'pinia';
-import test from 'node:test';
+import { useTestFilter } from '@/composables/useTestFilter';
+import { useTestStats } from '@/composables/useTestStats';
+import { useTestOperations } from '@/composables/useTestOperations';
 
 const testStore = useTestStore();
 const { selectedTest, searchQuery } = storeToRefs(testStore);
-function formatDate(date) {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: '2-digit',
-    year: 'numeric',
-  }).format(date) + ' • ' +
-    new Intl.DateTimeFormat('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    }).format(date)
-}
+const { runTest: executeTest } = useTestOperations();
 
 
 let testsDesc=ref([
@@ -63,36 +54,11 @@ let testsDesc=ref([
 
 testStore.setSelectedTest(testsDesc.value[0] || null);
 
-const filteredTests = computed(() => {
-  if (!searchQuery.value.trim()) {
-    return testsDesc.value;
-  }
-  
-  const query = searchQuery.value.trim().toLowerCase();
-  return testsDesc.value.filter(test => {
-    return (
-      test.title.toLowerCase().includes(query) ||
-      test.environment.toLowerCase().includes(query) ||
-      test.tags.some(tag => tag.toLowerCase().includes(query)) 
-    );
-  });
-});
+const { filteredTests } = useTestFilter(testsDesc, searchQuery);
+const { passCnt, failCnt, notRunCnt } = useTestStats(testsDesc);
 
-const passCnt = computed(() =>
-  testsDesc.value.filter(t => t.status === 'PASS').length
-)
-
-const failCnt = computed(() =>
-  testsDesc.value.filter(t => t.status === 'FAIL').length
-)
-
-const notRunCnt = computed(() =>
-  testsDesc.value.filter(t => t.status === 'NEW').length
-)
-
-
-let runTest=(ind)=>{
-    testsDesc.value[ind].lastRun=formatDate(new Date());
+const runTest = (ind) => {
+  executeTest(testsDesc.value[ind]);
 }
 
 </script>

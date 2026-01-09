@@ -30,7 +30,7 @@ defineProps({
 <template>
 
 <div class="flex flex-col items-center lg:flex-row gap-3">
-<!-- pass -->
+
   <Card class="mt-5 rounded-lg overflow-hidden w-full lg:w-1/3 bg-[#1c2333] h-28">
     <CardHeader>
       <CardTitle class="text-center text-[#10b981] text-2xl font-bold">{{ passCnt }}</CardTitle>
@@ -40,8 +40,7 @@ defineProps({
      PASSING
     </CardFooter>
   </Card>
-
-  <!-- fail -->
+  
   <Card class="mt-5 rounded-lg overflow-hidden w-full lg:w-1/3 bg-[#1c2333] h-28">
     <CardHeader>
       <CardTitle class="text-center text-[#ef4444] text-2xl font-bold">{{ failCnt }}</CardTitle>
@@ -52,7 +51,6 @@ defineProps({
     </CardFooter>
   </Card>
 
-  <!-- not run -->
   <Card class="mt-5 rounded-lg overflow-hidden w-full  lg:w-1/3 bg-[#1c2333] h-28">
     <CardHeader>
       <CardTitle class="text-center text-slate-500 text-2xl font-bold ">{{ notRunCnt }}</CardTitle>

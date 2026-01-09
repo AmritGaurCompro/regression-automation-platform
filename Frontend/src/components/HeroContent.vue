@@ -37,9 +37,7 @@ const normalizedScriptContent = `test('login flow', async ({ page }) => {
   await page.goto('/')
 })`
 
-const handleRunTest = () => {
-  console.log('Run test', selectedTest.value)
-}
+
 </script>
 
 <template>
