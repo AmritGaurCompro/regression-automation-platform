@@ -4,20 +4,30 @@
            rounded-lg bg-[#1c2333] border border-slate-800
            px-6 py-4"
   >
-    <!-- Left: Title + Meta -->
     <div>
       <h1 class="text-xl font-bold text-white">
         {{ title }}
       </h1>
 
-      <p class="mt-1 text-sm text-slate-400">
-        Tags: {{ tags.join(', ') }}
-        <span class="mx-1">•</span>
-        Environment: {{ environment }}
-      </p>
+      <div class="mt-1 flex items-center text-sm text-slate-400">
+        <!-- Tags -->
+        <span>Tags: </span>
+        <span v-if="tags?.length" class="ml-1">
+          {{ tags.join(', ') }}
+        </span>
+
+        <!-- Bullet -->
+        <span v-if="tags?.length && environment" class="mx-2">
+          • Environment:
+        </span>
+
+        <!-- Environment -->
+        <span v-if="environment">
+          {{ environment }}
+        </span>
+      </div>
     </div>
 
-    <!-- Right: Actions -->
     <div class="flex items-center gap-3">
       <button
         class="rounded-md border px-3 py-3 text-sm hover:bg-muted bg-[#10b981]"
@@ -30,33 +40,14 @@
 </template>
 
 <script setup>
-import { useTestStore } from '@/stores/testStore'
-import { computed } from 'vue'
+import { useTestOperations } from '@/composables/useTestOperations'
 
-const props = defineProps({
+defineProps({
   title: String,
   tags: Array,
   environment: String
 })
 
-const testStore = useTestStore()
-
-const runTest = () => {
-  const selectedTest = testStore.selectedTest
-
-  if (!selectedTest) return
-
-  selectedTest.lastRun =
-    new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: '2-digit',
-      year: 'numeric'
-    }).format(new Date()) +
-    ' • ' +
-    new Intl.DateTimeFormat('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    }).format(new Date())
-}
+const { runSelectedTest: runTest } = useTestOperations()
 </script>
+
