@@ -10,9 +10,55 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 0) do
+ActiveRecord::Schema.define(version: 2026_01_19_105529) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
+  create_table "artifacts", force: :cascade do |t|
+    t.bigint "test_run_id", null: false
+    t.string "kind"
+    t.jsonb "metadata"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["test_run_id"], name: "index_artifacts_on_test_run_id"
+  end
+
+  create_table "scripts", force: :cascade do |t|
+    t.string "name"
+    t.text "raw_content"
+    t.text "normalized_content"
+    t.string "language"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+  end
+
+  create_table "test_runs", force: :cascade do |t|
+    t.bigint "test_id", null: false
+    t.string "status", default: "not_run"
+    t.datetime "started_at"
+    t.datetime "finished_at"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.bigint "script_id"
+    t.string "environment", null: false
+    t.string "runner_mode", default: "headless", null: false
+    t.integer "retries_on_failure", default: 0, null: false
+    t.text "tags"
+    t.index ["script_id"], name: "index_test_runs_on_script_id"
+    t.index ["test_id"], name: "index_test_runs_on_test_id"
+  end
+
+  create_table "tests", force: :cascade do |t|
+    t.string "title"
+    t.bigint "script_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["script_id"], name: "index_tests_on_script_id"
+  end
+
+  add_foreign_key "artifacts", "test_runs"
+  add_foreign_key "test_runs", "scripts"
+  add_foreign_key "test_runs", "tests"
+  add_foreign_key "tests", "scripts"
 end

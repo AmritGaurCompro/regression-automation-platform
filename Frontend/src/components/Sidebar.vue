@@ -19,12 +19,10 @@ import { useTestFilter } from '@/composables/useTestFilter'
 import { useTestStats } from '@/composables/useTestStats'
 import { useTestOperations } from '@/composables/useTestOperations'
 
-/* Store and State */
 const testStore = useTestStore()
 const { selectedTest, searchQuery } = storeToRefs(testStore)
 const { runTest: executeTest } = useTestOperations()
 
-/* Test Data */
 const testsDesc = ref([
   {
     id: Math.random(),
@@ -52,16 +50,15 @@ const testsDesc = ref([
   },
 ])
 
-/* Set Initial Selected Test */
 testStore.setSelectedTest(testsDesc.value[0] || null)
 
-/* Filters and Stats */
 const { filteredTests } = useTestFilter(testsDesc, searchQuery)
 const { passCnt, failCnt, notRunCnt } = useTestStats(testsDesc)
 
-/* Methods */
 const runTest = (ind) => {
-  executeTest(testsDesc.value[ind])
+  const test = testsDesc.value[ind]
+  testStore.setSelectedTest(test)
+  executeTest(test)
 }
 </script>
 
