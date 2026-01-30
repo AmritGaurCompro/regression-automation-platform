@@ -13,9 +13,16 @@ import Button from './ui/button/Button.vue';
 import Separator from './ui/separator/Separator.vue';
 import { useTestStore } from '@/stores/testStore';
 import { storeToRefs } from 'pinia';
+import { ref } from 'vue'
+import RecordTestModal from '@/components/RecordTestModal.vue'
 
 const testStore = useTestStore();
 const { searchQuery } = storeToRefs(testStore);
+const recordModalRef = ref(null)
+
+const openRecordModal = () => {
+  recordModalRef.value?.show()
+}
 
 </script>
 
@@ -44,8 +51,9 @@ const { searchQuery } = storeToRefs(testStore);
 
             <div class="lg:mr-3">
                 <Button class="bg-red-500 m-3 px-3 py-5 rounded-md hover:bg-red-600 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white animate-pulse transition-all duration-200 ease-out
-    hover:-translate-y-0.5 focus-visible:-translate-y-0.5 ">● Record New</Button>
+    hover:-translate-y-0.5 focus-visible:-translate-y-0.5 " @click="openRecordModal">● Record New</Button>
                 <Button class="px-3 py-5 rounded-md focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white hover:-translate-y-0.5 focus-visible:-translate-y-0.5">📥 Import</Button>
+                <RecordTestModal ref="recordModalRef" />
             </div>
         </div>
      

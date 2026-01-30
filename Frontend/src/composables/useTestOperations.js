@@ -16,7 +16,6 @@ export function useTestOperations() {
 
     selectedTest.lastRun = getCurrentTimestamp()
 
-    // ✅ ID in URL, title in body
     await axios.post(`/api/test/${id}`, {
       title: title
     })
@@ -31,7 +30,6 @@ export function useTestOperations() {
 
     selectedTest.lastRun = getCurrentTimestamp()
 
-    // ✅ ID in URL, title in body
     await axios.post(`/api/test/${id}`, {
       title: title
     })
