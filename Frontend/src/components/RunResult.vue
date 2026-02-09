@@ -51,23 +51,23 @@ Next steps:
 <template>
   <div class="
  w-full lg:w-[100%] ">
-    <RunResultHeader :title="selectedTest.title"/>
+    <RunResultHeader :title="selectedTest?.title"/>
     <div
       class="border border-slate-800
             bg-[#161b26]
              p-6 space-y-6"
     >
       <RunResultStatus
-        :status=selectedTest.status
-        :run-id="runResult.id"
-        :run-time=selectedTest.lastRun
+        :status=selectedTest?.status
+        :run-id="runResult?.id"
+        :run-time=selectedTest?.lastRun
       />
    
       <RunResultMeta
-        :environment=selectedTest.environment
-        :duration="runResult.duration"
-        :started-at="runResult.startedAt"
-        :finished-at="runResult.finishedAt"
+        :environment=selectedTest?.environment
+        :duration="runResult?.duration"
+        :started-at="runResult?.startedAt"
+        :finished-at="runResult?.finishedAt"
       />
       <ErrorLog :error="runResult.error" />
         <Artifacts />
