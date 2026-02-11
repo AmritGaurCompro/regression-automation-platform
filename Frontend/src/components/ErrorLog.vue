@@ -28,20 +28,12 @@ const props = defineProps({
       <CardTitle class="flex items-center gap-2 text-white">
         📋 Error Log
       </CardTitle>
-
-      <Badge
-
-        class="uppercase tracking-wide bg-red-600"
-      >
-        {{ error.type }}
-      </Badge>
     </CardHeader>
-    <CardContent class="pt-4">
+    <CardContent class="pt-4 overflow-auto">
       <pre
-        class="whitespace-pre-wrap text-sm leading-relaxed
-               text-slate-200 font-mono"
+        class="text-wrap"
       >
-{{ error.message }}
+     {{ JSON.stringify(error, null, 2) }}
       </pre>
     </CardContent>
   </Card>

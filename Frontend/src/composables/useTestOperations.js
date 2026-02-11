@@ -25,6 +25,7 @@ export function useTestOperations() {
         tags: selectedTest.tags
       }
     )
+    testStore.startPolling(selectedTest.id)
   }
 
   const runSelectedTest = async () => {
@@ -46,31 +47,7 @@ export function useTestOperations() {
         tags: selectedTest.tags
       }
     ) 
-     console.log('Run created:', res.data.test_run_id)
-
-        // refresh after job runs
-      pollStatus(selectedTest.id)
-  }
-
-  const pollStatus = async (testId) => {
-    console.log("⏳ polling status for test", testId)
-
-    const res = await axios.get('/api/tests')
-
-    const updatedTest = res.data.find(t => t.id === testId)
-
-    if (!updatedTest) return
-
-    console.log("📊 status:", updatedTest.status)
-
-    if (updatedTest.status === 'not_run') {
-      // keep polling
-      setTimeout(() => pollStatus(testId), 2000)
-    } else {
-      // finished → update store
-      testStore.tests = res.data
-      console.log("✅ test finished — store updated")
-    }
+      testStore.startPolling(selectedTest.id)
   }
 
   return {

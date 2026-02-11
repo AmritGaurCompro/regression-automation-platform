@@ -10,6 +10,7 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card"
 import { useTestStore } from '@/stores/testStore'
 import { storeToRefs } from 'pinia'
 import { ref } from "vue"
+import { computed } from "vue"
 
 const testStore = useTestStore()
 const { selectedTest } = storeToRefs(testStore)
@@ -28,24 +29,17 @@ const runResult = reactive({
   duration: "41s",
   startedAt: "11:05:22",
   finishedAt: "11:06:03",
-  error: {
-    type: "LOCATOR TIMEOUT",
-    message: `
-✖ main flow
-waiting for getByRole('button', { name: 'Continue' }) to be visible
-Timeout 30s exceeded.
-
-Possible causes:
-• UI element changed (button text/role modified)
-• Slow backend response
-• Wrong environment baseURL
-
-Next steps:
-→ Open trace.zip in Playwright Trace Viewer
-→ Check screenshot for actual UI state
-`,
-  },
 })
+
+const artifacts = computed(() => selectedTest.value?.artifacts || [])
+
+const errorArtifact = computed(() =>
+  artifacts.value.find(a => a.kind === "error_log")
+)
+
+const fileArtifacts = computed(() =>
+  artifacts.value.filter(a => a.kind !== "error_log")
+)
 </script>
 
 <template>
@@ -69,8 +63,14 @@ Next steps:
         :started-at="runResult?.startedAt"
         :finished-at="runResult?.finishedAt"
       />
-      <ErrorLog :error="runResult.error" />
-        <Artifacts />
+      <ErrorLog
+  v-if="errorArtifact"
+  :error="errorArtifact.metadata"
+/>
+        <Artifacts
+  v-if="fileArtifacts.length"
+  :artifacts="fileArtifacts"
+/>
          <RunHistory :runs="runs" />
          <Card
   class="bg-[#0d1117] border-l-[3px] border-l-[#6366f1] w-full

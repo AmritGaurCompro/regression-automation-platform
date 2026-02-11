@@ -27,6 +27,7 @@ class RunPlaywrightJob < ApplicationJob
         finished_at: Time.current
       )
     end
+    UploadArtifactsJob.perform_later(test_run.id)
   rescue => e
     test_run.update!(status: "failed") if test_run
     Rails.logger.error(e.message)
