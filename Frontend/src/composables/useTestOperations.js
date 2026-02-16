@@ -6,7 +6,11 @@ import axios from 'axios'
 export function useTestOperations() {
   const testStore = useTestStore()
   const { getCurrentTimestamp } = useDateFormatter()
+  const { testRunConfig } = storeToRefs(testStore)
+  
 
+    
+  
   const runTest = async () => {
     const { selectedTest } = testStore
     if (!selectedTest) return
@@ -14,18 +18,19 @@ export function useTestOperations() {
     const { id, title } = selectedTest
     if (!id || !title) return
 
-    selectedTest.lastRun = getCurrentTimestamp()
-
     await axios.post(
       `/api/tests/${selectedTest.id}/test_runs`,
       {
-        environment: selectedTest.environment,
-        runner_mode: selectedTest.runner_mode,
-        retries_on_failure: selectedTest.retries_on_failure,
+         environment: selectedTest.environment,
+        runner_mode: testRunConfig.value.runner_mode,
+        retries_on_failure: testRunConfig.value.retries,
         tags: selectedTest.tags
       }
     )
     testStore.startPolling(selectedTest.id)
+    selectedTest.lastRun = getCurrentTimestamp()
+
+    await testStore.fetchTestRuns(selectedTest.id)
   }
 
   const runSelectedTest = async () => {
@@ -36,18 +41,22 @@ export function useTestOperations() {
     const { id, title } = selectedTest
     if (!id || !title) return
 
-    selectedTest.lastRun = getCurrentTimestamp()
+    
 
     const res = await axios.post(
       `/api/tests/${selectedTest.id}/test_runs`,
       {
         environment: selectedTest.environment,
-        runner_mode: selectedTest.runner_mode,
-        retries_on_failure: selectedTest.retries_on_failure,
+        runner_mode: testRunConfig.value.runner_mode,
+        retries_on_failure: testRunConfig.value.retries,
         tags: selectedTest.tags
       }
     ) 
       testStore.startPolling(selectedTest.id)
+      selectedTest.lastRun = getCurrentTimestamp()
+      
+      await testStore.fetchTestRuns(selectedTest.id)
+       
   }
 
   return {

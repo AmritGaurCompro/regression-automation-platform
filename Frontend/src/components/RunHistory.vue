@@ -64,8 +64,8 @@ defineProps({
           </span>
 
           <Badge     :class="{
-        'bg-emerald-600' : run.status === 'pass',
-        'bg-red-600': run.status === 'fail'
+        'bg-emerald-600' : run.status === 'passed',
+        'bg-red-600': run.status === 'failed'
     }" class="w-fit">
             {{ run.status.toUpperCase() }}
           </Badge>
@@ -85,8 +85,8 @@ defineProps({
             </span>
 
             <Badge :class="{
-        'bg-emerald-600' : run.status === 'pass',
-        'bg-red-600': run.status === 'fail'
+        'bg-emerald-600' : run.status === 'passed',
+        'bg-red-600': run.status === 'failed'
     }" >
               {{ run.status.toUpperCase() }}
             </Badge>

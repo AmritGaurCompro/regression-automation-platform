@@ -9,32 +9,29 @@ import {
 } from '@/components/ui/card'
 import { Button } from './ui/button';
 import Badge from './ui/badge/Badge.vue';
-import { storeToRefs } from 'pinia';
-import { useTestStore } from '@/stores/testStore';
+import { useDateFormatter } from '@/composables/useDateFormatter';
 
-const testStore = useTestStore()
-
-const {tests} =storeToRefs(testStore)
 
 
 defineProps({
-    test:{
+    tests:{
         type: Object,
         required: true
     }
 })
 const emit = defineEmits(['action'])
 
+const { formatDateTime } = useDateFormatter()
 
 </script>
 
 <template>
     <Card class="bg-[#1c2333] mt-5 cursor-pointer border-l-[#1e293b] border-l-4 border-r-2 border-t-2 border-b-2 transition-transform duration-200 hover:translate-x-2">
     <CardHeader>
-      <CardTitle class="flex justify-between gap-3 items-start ">
+      <CardTitle class="flex justify-between gap-3 items-start flex-wrap">
 
         <div>
-          <p class="animate-pulse" v-if="tests.status=='failed'">🔴</p>
+          <p class="animate-pulse" v-if="tests?.status=='failed'">🔴</p>
           <p  v-else-if="tests.status=='passed'">🟢</p>
           <p v-else>🔘</p>
 
@@ -42,11 +39,11 @@ const emit = defineEmits(['action'])
         </div>
 
         <div class="flex flex-col gap-3 ">
-          <p class="text-wrap">{{  tests?.title }}</p>
+          <p class="text-wrap ">{{  tests?.title }}</p>
           <p class="text-xs font-normal">🌐 {{ tests?.environment }}</p>
         </div>
 
-        <p class="text-slate-500 text-xs font-semibold text-wrap" v-if="tests?.lastRun!=null" >{{ tests?.lastRun }}</p>
+        <p class="text-slate-500 text-xs font-semibold text-wrap" v-if="tests?.lastRun!=null" >{{ formatDateTime(new Date(tests.lastRun)) }}</p>
         <p class="text-slate-500 text-xs font-semibold text-wrap" v-else>Never run</p>
       </CardTitle>
     </CardHeader>

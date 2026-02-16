@@ -1,14 +1,11 @@
 import { test, expect } from '@playwright/test';
 
 test('test', async ({ page }) => {
-  await page.goto('https://www.vhlcentral.com/');
-  await page.getByRole('textbox', { name: 'Username or Email' }).click();
-  await page.getByRole('textbox', { name: 'Username or Email' }).fill('mtaparia_instructor');
-  await page.locator('music-text-field-v3').filter({ hasText: 'Password' }).click();
-  await page.locator('music-text-field-v3').filter({ hasText: 'Password' }).click();
-  await page.getByRole('textbox', { name: 'Password' }).fill('@compro2018');
-  await page.getByRole('button', { name: 'Login' }).click();
-  await page.getByLabel('BRIDGES California E').getByRole('link', { name: 'My Dashboard' }).click();
-  await page.getByRole('button', { name: 'Grades' }).click();
-  await page.locator('#main-menubar').getByText('Assignments', { exact: true }).click();
+  await page.goto('https://www.writeyournote.com/auth/login');
+  await page.getByRole('textbox', { name: 'Email' }).click();
+  await page.getByRole('textbox', { name: 'Email' }).fill('student5@mailsac.com');
+  await page.getByRole('textbox', { name: 'Password' }).click();
+  await page.getByRole('textbox', { name: 'Password' }).fill('Compro111');
+  await page.getByRole('button', { name: 'Log In' }).click();
+  await page.getByRole('link', { name: 'My Notes' }).click();
 });

@@ -36,7 +36,7 @@ ActiveRecord::Schema.define(version: 2026_02_10_063947) do
 
   create_table "test_runs", force: :cascade do |t|
     t.bigint "test_id", null: false
-    t.string "status", default: "not_run"
+    t.string "status", default: "running"
     t.datetime "started_at"
     t.datetime "finished_at"
     t.datetime "created_at", precision: 6, null: false

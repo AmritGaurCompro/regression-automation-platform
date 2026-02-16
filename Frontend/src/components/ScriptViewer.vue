@@ -1,5 +1,5 @@
 <template>
-  <div class="mb-4 ml-6 gap-4">
+   <div class="mb-4 ml-6 gap-4">
     <button
       class="text-sm font-medium mr-4"
       :class="activeTab === 'raw'
@@ -9,7 +9,7 @@
     >
       Raw Script
     </button>
-
+    
     <button
       class="text-sm font-medium"
       :class="activeTab === 'normalized'
@@ -55,7 +55,7 @@
 
     <!-- Code -->
     <pre class="overflow-auto px-6 py-4 text-sm bg-[rgb(13_17_23)]">
-      <code>{{ displayedScript }}</code>
+      <code>{{ rawScript }}</code>
     </pre>
 
     <!-- Footer -->
@@ -92,8 +92,10 @@
         Enable trace & screenshots on failure
       </CardDescription>
     </CardHeader>
-  </Card>
+  </Card> 
 </template>
+
+
 
 <script setup>
 import { computed, ref } from 'vue'

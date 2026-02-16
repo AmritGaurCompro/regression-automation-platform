@@ -29,8 +29,12 @@ const { tests, selectedTest, searchQuery } = storeToRefs(testStore)
 const { runSelectedTest } = useTestOperations()
 
 // ✅ fetch tests from backend when sidebar loads
-onMounted(() => {
-  testStore.refreshTestsFromBackend()
+onMounted(async () => {
+  await testStore.refreshTestsFromBackend()
+
+  if (tests.value.length > 0) {
+    testStore.setSelectedTest(tests.value[0])
+  }
 })
 
 // ✅ filters + stats now use store tests
@@ -38,12 +42,11 @@ const { filteredTests } = useTestFilter(tests, searchQuery)
 const { passCnt, failCnt, notRunCnt } = useTestStats(tests)
 
 // ✅ run handler
-const runTest = (test) => {
+const handleRunTest = async (test) => {
   testStore.setSelectedTest(test)
-  runSelectedTest()
+  await runSelectedTest()
 }
 </script>
-
 
 <template>
   <Card class="mt-36 lg:mt-0 w-full lg:w-[25%] rounded-lg overflow-hidden">
@@ -65,7 +68,7 @@ const runTest = (test) => {
           :tests="test"
           @click="testStore.setSelectedTest(test)"
           :class="selectedTest?.id === test.id ? 'border-[#6366f1] border-l-[#8b5cf6]' : ''"
-          @action="runTest(test)"
+          @action="handleRunTest(test)"
         />
       </div>
     </CardContent>

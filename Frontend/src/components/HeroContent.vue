@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useTestStore } from '@/stores/testStore'
 import { storeToRefs } from 'pinia'
 
@@ -11,13 +11,14 @@ import RunResult from '@/components/RunResult.vue'
 const testStore = useTestStore()
 const { selectedTest } = storeToRefs(testStore)
 
+// Test-level properties (from Test model)
 const environment = computed({
   get: () => selectedTest.value?.environment || '',
   set: val => (selectedTest.value.environment = val)
 })
 
 const tags = computed({
-  get: () => selectedTest.value?.tags.join(', ') || '', 
+  get: () => selectedTest.value?.tags?.join(', ') || '', 
   set: val => {
     selectedTest.value.tags = val
       .split(',')
@@ -26,18 +27,19 @@ const tags = computed({
   }
 })
 
-const runnerMode = 'headless'
-const retries = 2
+// Test run configuration (for creating new test_run)
+const runnerMode = computed({
+  get: () => selectedTest.value?.runner_mode || 'headless',
+  set: val => (selectedTest.value.runner_mode = val)
+})
 
-const rawScriptContent = `test('login flow', async ({ page }) => {
-  await page.goto('https://staging.example.com')
-})`
+const retries = computed({
+  get: () => selectedTest.value?.retries_on_failure ?? 2,
+  set: val => (selectedTest.value.retries_on_failure = val)
+})
 
-const normalizedScriptContent = `test('login flow', async ({ page }) => {
-  await page.goto('/')
-})`
-
-
+const rawScriptContent = computed(() => selectedTest.value?.script || '// No script available')
+const scriptFilename = computed(() => selectedTest.value?.script_filename || `${selectedTest.value?.title}.spec.js`)
 </script>
 
 <template>
@@ -47,7 +49,7 @@ const normalizedScriptContent = `test('login flow', async ({ page }) => {
       :title="selectedTest.title"
       :tags="selectedTest.tags"
       :environment="selectedTest.environment"
-      @run="handleRunTest"
+      @runTest="runSelectedTest"
     />
 
     <TestData
@@ -62,12 +64,16 @@ const normalizedScriptContent = `test('login flow', async ({ page }) => {
       ]"
       @update:environment="environment = $event"
       @update:tags="tags = $event"
+      @update:runnerMode="runnerMode = $event"
+      @update:retries="retries = $event"
     />
 
     <ScriptViewer
+      v-if="selectedTest"
       :rawScript="rawScriptContent"
-      :normalizedScript="normalizedScriptContent"
+      :scriptFilename="scriptFilename"
     />
-    <RunResult />
+    
+    <RunResult v-if="selectedTest" />
   </div>
 </template>

@@ -9,26 +9,59 @@ import RunHistory from "./RunHistory.vue"
 import { Card, CardHeader, CardContent } from "@/components/ui/card"    
 import { useTestStore } from '@/stores/testStore'
 import { storeToRefs } from 'pinia'
-import { ref } from "vue"
-import { computed } from "vue"
+import { ref,computed, watch, onMounted } from "vue"
 
 const testStore = useTestStore()
-const { selectedTest } = storeToRefs(testStore)
+const { selectedTest, testRuns } = storeToRefs(testStore)
 const loading = ref(false)
 const fetchError = ref(null)
-const runs = [
-  { id: "#128", status: "fail", environment: "QA", duration: "41s" },
-  { id: "#127", status: "pass", environment: "QA", duration: "29s" },
-  { id: "#125", status: "pass", environment: "DEV", duration: "33s" },
-  { id: "#122", status: "fail", environment: "DEV", duration: "47s" },
-] 
+
+const loadRuns = async () => {
+  if (!selectedTest.value?.id) return
+  loading.value = true
+  try {
+    await testStore.fetchTestRuns(selectedTest.value.id)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(loadRuns)
+watch(selectedTest, loadRuns)
 
 
-const runResult = reactive({
-  id: "#128",
-  duration: "41s",
-  startedAt: "11:05:22",
-  finishedAt: "11:06:03",
+
+// Computed properties for RunResultStatus
+const runStatus = computed(() => selectedTest.value?.status || "NEW")
+const runId = computed(() => selectedTest.value?.id ? `#${selectedTest.value.id}` : "#-")
+const runTime = computed(() => selectedTest.value?.lastRun || "-")
+
+// Computed properties for RunResultMeta
+const environment = computed(() => selectedTest.value?.environment || "-")
+const duration = computed(() => selectedTest.value?.duration || "0s")
+const startedAt = computed(() => {
+  if (!selectedTest.value?.startedAt) return "-"
+  
+  // Format time as HH:MM:SS
+  const date = new Date(selectedTest.value.startedAt)
+  return date.toLocaleTimeString('en-US', { 
+    hour12: false, 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    second: '2-digit' 
+  })
+})
+const finishedAt = computed(() => {
+  if (!selectedTest.value?.finishedAt) return "-"
+  
+  // Format time as HH:MM:SS
+  const date = new Date(selectedTest.value.finishedAt)
+  return date.toLocaleTimeString('en-US', { 
+    hour12: false, 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    second: '2-digit' 
+  })
 })
 
 const artifacts = computed(() => selectedTest.value?.artifacts || [])
@@ -52,17 +85,18 @@ const fileArtifacts = computed(() =>
              p-6 space-y-6"
     >
       <RunResultStatus
-        :status=selectedTest?.status
-        :run-id="runResult?.id"
-        :run-time=selectedTest?.lastRun
+        :status="runStatus"
+        :run-id="runId"
+        :run-time="runTime"
       />
    
       <RunResultMeta
-        :environment=selectedTest?.environment
-        :duration="runResult?.duration"
-        :started-at="runResult?.startedAt"
-        :finished-at="runResult?.finishedAt"
+        :environment="environment"
+        :duration="duration"
+        :started-at="startedAt"
+        :finished-at="finishedAt"
       />
+
       <ErrorLog
   v-if="errorArtifact"
   :error="errorArtifact.metadata"
@@ -71,7 +105,7 @@ const fileArtifacts = computed(() =>
   v-if="fileArtifacts.length"
   :artifacts="fileArtifacts"
 />
-         <RunHistory :runs="runs" />
+         <RunHistory :runs="testRuns" />
          <Card
   class="bg-[#0d1117] border-l-[3px] border-l-[#6366f1] w-full
          border-r-transparent border-b-transparent border-t-transparent
