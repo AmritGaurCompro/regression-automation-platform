@@ -9,8 +9,8 @@ export function useTestStats(tests) {
     tests.value.filter(t => t.status === 'failed').length
   )
 
-  const notRunCnt = computed(() =>
-    tests.value.filter(t => t.status === 'not_run').length
+  const runCnt = computed(() =>
+    tests.value.filter(t => t.status === 'running').length
   )
 
   const totalCnt = computed(() => tests.value.length)
@@ -18,7 +18,7 @@ export function useTestStats(tests) {
   return {
     passCnt,
     failCnt,
-    notRunCnt,
+    runCnt,
     totalCnt
   }
 }

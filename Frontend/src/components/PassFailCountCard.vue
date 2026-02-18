@@ -18,7 +18,7 @@ defineProps({
         type: Number,
         required: true
     },
-    notRunCnt:{
+    runCnt:{
         type: Number,
         required: true
     }
@@ -53,7 +53,7 @@ defineProps({
 
   <Card class="mt-5 rounded-lg overflow-hidden w-full  lg:w-1/3 bg-[#1c2333] h-28">
     <CardHeader>
-      <CardTitle class="text-center text-slate-500 text-2xl font-bold ">{{ notRunCnt }}</CardTitle>
+      <CardTitle class="text-center text-slate-500 text-2xl font-bold ">{{ runCnt }}</CardTitle>
     </CardHeader>
      
     <CardFooter class="text-xs text-slate-500 font-semibold justify-center text-nowrap">

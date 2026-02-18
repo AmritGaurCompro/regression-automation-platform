@@ -39,7 +39,7 @@ onMounted(async () => {
 
 // ✅ filters + stats now use store tests
 const { filteredTests } = useTestFilter(tests, searchQuery)
-const { passCnt, failCnt, notRunCnt } = useTestStats(tests)
+const { passCnt, failCnt, runCnt } = useTestStats(tests)
 
 // ✅ run handler
 const handleRunTest = async (test) => {
@@ -61,7 +61,7 @@ const handleRunTest = async (test) => {
       <PassFailCountCard
         :passCnt="passCnt"
         :failCnt="failCnt"
-        :notRunCnt="notRunCnt"
+        :runCnt="runCnt"
       />
       <div v-for="test in filteredTests" :key="test.id">
         <TestCard
