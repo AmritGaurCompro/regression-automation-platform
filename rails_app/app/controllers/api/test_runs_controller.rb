@@ -1,5 +1,5 @@
 class Api::TestRunsController < ApplicationController
-    # GET /api/tests/:test_id/test_runs
+    
 def index
   test = Test.find(params[:test_id])
 
@@ -18,7 +18,7 @@ def index
       started_at: run.started_at,
       finished_at: run.finished_at,
       created_at: run.created_at,
-      duration: calculate_duration(run)   # ✅ works here
+      duration: calculate_duration(run)   
     }
   }
 end
@@ -50,7 +50,7 @@ end
   end
   
   
-  # ✅ duration helper
+  
   def calculate_duration(test_run)
     return nil unless test_run&.created_at && test_run&.updated_at
 
