@@ -9,26 +9,25 @@ import { Badge } from "@/components/ui/badge"
 
 import ArtifactItem from "./ArtifactItem.vue"
 
-const artifacts = [
-  {
-    id: 1,
-    title: "Screenshot (on failure)",
-    path: "shared/run_artifacts/run_128/failure.png",
-    icon: "🖼️",
-  },
-  {
-    id: 2,
-    title: "Trace File",
-    path: "shared/run_artifacts/run_128/trace.zip",
-    icon: "📊",
-  },
-  {
-    id: 3,
-    title: "Console Logs",
-    path: "shared/run_artifacts/run_128/console.log",
-    icon: "📝",
-  },
-]
+defineProps({
+  artifacts: {
+    type: Array,
+    required: true
+  }
+})
+
+const label = kind => {
+  switch (kind) {
+    case "screenshot":
+      return { title: "Screenshot (on failure)", icon: "🖼️" }
+    case "video":
+      return { title: "Execution Video", icon: "🎥" }
+    case "trace":
+      return { title: "Trace File", icon: "📊" }
+    default:
+      return { title: kind, icon: "📦" }
+  }
+}
 </script>
 
 <template>
@@ -49,13 +48,13 @@ const artifacts = [
       </Badge>
     </CardHeader>
     <CardContent class="space-y-4">
-      <ArtifactItem
-        v-for="item in artifacts"
-        :key="item.id"
-        :title="item.title"
-        :path="item.path"
-        :icon="item.icon"
-      />
+     <ArtifactItem
+  v-for="item in artifacts"
+  :key="item.kind"
+  :title="label(item.kind).title"
+  :path="item.url"
+  :icon="label(item.kind).icon"
+/>
     </CardContent>
   </Card>
 </template>

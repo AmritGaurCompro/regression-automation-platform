@@ -1,88 +1,113 @@
 <script setup>
 import { computed, ref } from "vue"
 import { Badge } from "@/components/ui/badge"
+import { useDateFormatter } from '@/composables/useDateFormatter'
 
 const props = defineProps({
   status: {
     type: String,
-    required: true,
-    validator: (value) => {
-      try {
-        return ["PASS", "FAIL", "PENDING", null, undefined].includes(value)
-      } catch {
-        return false
-      }
-    },
+    default: "NEW"
   },
-  runId: String,
-  runTime: String,
+  runId: {
+    type: String,
+    default: "#-"
+  },
+  runTime: {
+    type: String,
+    default: "-"
+  },
 })
 
 const error = ref(null)
+const { formatDateTime } = useDateFormatter()
 
-const getStatusValue = () => {
+const normalizedStatus = computed(() => {
   try {
-    const normalizedStatus = props.status?.toUpperCase?.()?.trim?.()
-    if (!normalizedStatus) return "PENDING"
-    if (["PASS", "FAIL"].includes(normalizedStatus)) {
-      return normalizedStatus
-    }
-    return "PENDING"
+    if (!props.status) return "NEW"
+    const status = props.status.toUpperCase().trim()
+    // Handle different status values from your API
+    if (["PASSED", "PASS"].includes(status)) return "PASSED"
+    if (["FAILED", "FAIL"].includes(status)) return "FAILED"
+    if (["RUNNING", "IN_PROGRESS"].includes(status)) return "RUNNING"
+    return "NEW"
   } catch (err) {
     error.value = "Error processing status"
-    return "PENDING"
-  }
-}
-
-const isPassed = computed(() => {
-  try {
-    return getStatusValue() === "PASS"
-  } catch {
-    return false
+    return "NEW"
   }
 })
 
+const isPassed = computed(() => normalizedStatus.value === "PASSED")
+const isFailed = computed(() => normalizedStatus.value === "FAILED")
+const isRunning = computed(() => normalizedStatus.value === "RUNNING")
+const isNew = computed(() => normalizedStatus.value === "NEW")
+
 const containerClasses = computed(() => {
   try {
-    return isPassed.value
-      ? "border-emerald-600/40 from-emerald-900/40 to-emerald-950"
-      : "border-red-600/40 from-red-900/40 to-red-950"
+    if (isPassed.value) {
+      return "border-emerald-600/40 from-emerald-900/40 to-emerald-950"
+    }
+    if (isFailed.value) {
+      return "border-red-600/40 from-red-900/40 to-red-950"
+    }
+    if (isRunning.value) {
+      return "border-blue-600/40 from-blue-900/40 to-blue-950"
+    }
+    return "border-slate-600/40 from-slate-900/40 to-slate-950"
   } catch {
     return "border-slate-600/40 from-slate-900/40 to-slate-950"
   }
 })
 
-const getStatusText = () => {
-  try {
-    const status = getStatusValue()
-    if (status === "PASS") return "Test Passed"
-    if (status === "FAIL") return "Test Failed"
-    return "Not Run Yet"
-  } catch {
-    return "Status Unknown"
-  }
-}
+const iconClasses = computed(() => {
+  if (isPassed.value) return "bg-emerald-600"
+  if (isFailed.value) return "bg-red-600"
+  if (isRunning.value) return "bg-blue-600"
+  return "bg-slate-600"
+})
 
-const getBadgeText = () => {
-  try {
-    const status = getStatusValue()
-    if (status === "PASS") return "PASSED"
-    if (status === "FAIL") return "FAILED"
-    return "PENDING"
-  } catch {
-    return "ERROR"
-  }
-}
+const iconSymbol = computed(() => {
+  if (isPassed.value) return "✔"
+  if (isFailed.value) return "✕"
+  if (isRunning.value) return "⟳"
+  return "○"
+})
 
-const getRunInfo = () => {
+const statusText = computed(() => {
+  if (isPassed.value) return "Test Passed"
+  if (isFailed.value) return "Test Failed"
+  if (isRunning.value) return "Test Running"
+  return "Not Run Yet"
+})
+
+const badgeText = computed(() => normalizedStatus.value)
+
+const badgeClasses = computed(() => {
+  if (isPassed.value) return "bg-emerald-600"
+  if (isFailed.value) return "bg-red-600"
+  if (isRunning.value) return "bg-blue-600 animate-pulse"
+  return "bg-slate-600"
+})
+
+const runInfo = computed(() => {
   try {
-    const id = props.runId ?? "—"
-    const time = props.runTime ?? "—"
-    return `Run ${id} • ${time}`
+    const id = props.runId || "—"
+    const time = props.runTime || "—"
+    
+    // Use the composable to format the time
+    let formattedTime = time
+    if (time !== "—") {
+      try {
+        formattedTime = formatDateTime(new Date(time))
+      } catch {
+        formattedTime = time
+      }
+    }
+    
+    return `Run ${id} • ${formattedTime}`
   } catch {
     return "Run info unavailable"
   }
-}
+})
 </script>
 
 <template>
@@ -101,29 +126,26 @@ const getRunInfo = () => {
     <div class="flex items-center gap-4">
       <div
         class="flex h-12 w-12 items-center justify-center rounded-full"
-        :class="isPassed ? 'bg-emerald-600' : 'bg-red-600'"
+        :class="iconClasses"
       >
         <span class="text-xl text-white">
-          {{ isPassed ? "✔" : "✕" }}
+          {{ iconSymbol }}
         </span>
       </div>
       <div>
         <h3 class="text-lg font-semibold text-white">
-          {{ getStatusText() }}
+          {{ statusText }}
         </h3>
         <p class="text-sm text-slate-400">
-          {{ getRunInfo() }}
+          {{ runInfo }}
         </p>
       </div>
     </div>
     <Badge
-      :class="{
-        'bg-emerald-600': isPassed,
-        'bg-red-600': !isPassed,
-      }"
+      :class="badgeClasses"
       class="uppercase tracking-wide self-start sm:self-auto"
     >
-      {{ getBadgeText() }}
+      {{ badgeText }}
     </Badge>
   </div>
 </template>

@@ -7,12 +7,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+
 import Separator from './ui/separator/Separator.vue'
 import PassFailCountCard from './PassFailCountCard.vue'
 import TestCard from './TestCard.vue'
 import InformationalTip from './InformationalTip.vue'
 
-import { ref } from 'vue'
+import { onMounted } from 'vue'
 import { useTestStore } from '@/stores/testStore'
 import { storeToRefs } from 'pinia'
 import { useTestFilter } from '@/composables/useTestFilter'
@@ -20,45 +21,30 @@ import { useTestStats } from '@/composables/useTestStats'
 import { useTestOperations } from '@/composables/useTestOperations'
 
 const testStore = useTestStore()
-const { selectedTest, searchQuery } = storeToRefs(testStore)
-const { runTest: executeTest } = useTestOperations()
 
-const testsDesc = ref([
-  {
-    id: Math.random(),
-    title: 'Login',
-    environment: 'QA',
-    tags: ['smoke', 'login', 'core'],
-    lastRun: null,
-    status: 'FAIL',
-  },
-  {
-    id: Math.random(),
-    title: 'Navigation',
-    environment: 'DEV',
-    tags: ['regression', 'navigation'],
-    lastRun: null,
-    status: 'PASS',
-  },
-  {
-    id: Math.random(),
-    title: 'Page Load',
-    environment: 'QA',
-    tags: ['performance'],
-    lastRun: null,
-    status: 'NEW',
-  },
-])
+// ✅ reactive store refs
+const { tests, selectedTest, searchQuery } = storeToRefs(testStore)
 
-testStore.setSelectedTest(testsDesc.value[0] || null)
+// ✅ composables
+const { runSelectedTest } = useTestOperations()
 
-const { filteredTests } = useTestFilter(testsDesc, searchQuery)
-const { passCnt, failCnt, notRunCnt } = useTestStats(testsDesc)
+// ✅ fetch tests from backend when sidebar loads
+onMounted(async () => {
+  await testStore.refreshTestsFromBackend()
 
-const runTest = (ind) => {
-  const test = testsDesc.value[ind]
+  if (tests.value.length > 0) {
+    testStore.setSelectedTest(tests.value[0])
+  }
+})
+
+// ✅ filters + stats now use store tests
+const { filteredTests } = useTestFilter(tests, searchQuery)
+const { passCnt, failCnt, runCnt } = useTestStats(tests)
+
+// ✅ run handler
+const handleRunTest = async (test) => {
   testStore.setSelectedTest(test)
-  executeTest(test)
+  await runSelectedTest()
 }
 </script>
 
@@ -67,7 +53,7 @@ const runTest = (ind) => {
     <CardHeader class="bg-[#1c2333]">
       <CardTitle class="font-bold">Test Scripts</CardTitle>
       <CardDescription class="text-xs text-slate-500 font-semibold">
-        {{ filteredTests.length }} of {{ testsDesc.length }} tests
+        {{ filteredTests.length }} of {{ tests.length }} tests
       </CardDescription>
     </CardHeader>
     <Separator />
@@ -75,14 +61,14 @@ const runTest = (ind) => {
       <PassFailCountCard
         :passCnt="passCnt"
         :failCnt="failCnt"
-        :notRunCnt="notRunCnt"
+        :runCnt="runCnt"
       />
       <div v-for="test in filteredTests" :key="test.id">
         <TestCard
-          :desc="test"
-          @click="selectedTest = test"
+          :tests="test"
+          @click="testStore.setSelectedTest(test)"
           :class="selectedTest?.id === test.id ? 'border-[#6366f1] border-l-[#8b5cf6]' : ''"
-          @action="runTest(testsDesc.indexOf(test))"
+          @action="handleRunTest(test)"
         />
       </div>
     </CardContent>

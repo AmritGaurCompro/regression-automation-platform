@@ -10,27 +10,23 @@
       </h1>
 
       <div class="mt-1 flex items-center text-sm text-slate-400">
-        <!-- Tags -->
-        <span>Tags: </span>
+        <span>Tags:</span>
         <span v-if="tags?.length" class="ml-1">
           {{ tags.join(', ') }}
         </span>
 
-        <!-- Bullet -->
-        <span v-if="tags?.length && environment" class="mx-2">
-          • Environment:
-        </span>
+        <span v-if="tags?.length && environment" class="mx-2">•</span>
 
-        <!-- Environment -->
         <span v-if="environment">
-          {{ environment }}
+          Environment: {{ environment }}
         </span>
       </div>
     </div>
 
     <div class="flex items-center gap-3">
       <button
-        class="rounded-md border px-3 py-3 text-sm hover:bg-muted bg-[#10b981]"
+        class="rounded-md border px-4 py-2 text-sm
+               bg-[#10b981] text-black hover:opacity-90"
         @click="runTest"
       >
         ▶ Run Test
@@ -49,5 +45,7 @@ defineProps({
 })
 
 const { runSelectedTest: runTest } = useTestOperations()
+
 </script>
+
 
