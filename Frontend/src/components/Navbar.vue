@@ -32,7 +32,7 @@ const openRecordModal = () => {
         <div class="p-2 gap-3 flex flex-col justify-start w-full items-start flex-wrap lg:flex-row lg:justify-between lg:items-center">
             <div class="p-2 flex gap-7 pt-3">
                 <Avatar class="ml-2 mt-1">
-                    <AvatarImage src="https://github.com/evilrabbit.png" alt="logo" />
+                    <AvatarImage src="https://github.com/shadcn.png" alt="logo" />
                     <AvatarFallback>logo</AvatarFallback>
                 </Avatar>
 
