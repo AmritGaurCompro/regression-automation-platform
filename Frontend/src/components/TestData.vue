@@ -22,15 +22,15 @@
       </select>
     </div>
 
-    <!-- Runner Mode -->
+    <!-- Runner Mode - directly updates store -->
     <div class="w-full lg:w-64">
       <label class="mb-1 block text-xs font-medium text-muted-foreground">
         RUNNER MODE
       </label>
       <select
         class="w-full rounded-lg bg-background px-3 py-2 text-sm"
-        :value="runnerMode"
-        @change="emit('update:runnerMode', $event.target.value)"
+        :value="testRunConfig.runner_mode"
+        @change="testStore.updateTestRunConfig({ runner_mode: $event.target.value })"
       >
         <option value="headless">Headless (default)</option>
         <option value="headed">Headed</option>
@@ -51,15 +51,15 @@
       />
     </div>
 
-    <!-- Retries -->
+    <!-- Retries - directly updates store -->
     <div class="w-full lg:w-64">
       <label class="mb-1 block text-xs font-medium text-muted-foreground">
         RETRIES ON FAILURE
       </label>
       <select
         class="w-full rounded-lg bg-background px-3 py-2 text-sm"
-        :value="retries"
-        @change="emit('update:retries', Number($event.target.value))"
+        :value="testRunConfig.retries"
+        @change="testStore.updateTestRunConfig({ retries: Number($event.target.value) })"
       >
         <option v-for="n in 5" :key="n" :value="n - 1">
           {{ n - 1 }}
@@ -70,11 +70,15 @@
 </template>
 
 <script setup>
+import { useTestStore } from '@/stores/testStore'
+import { storeToRefs } from 'pinia'
+
+const testStore = useTestStore()
+const { testRunConfig } = storeToRefs(testStore)
+
 defineProps({
   environment: String,
-  runnerMode: String,
   tags: String,
-  retries: Number,
   environments: {
     type: Array,
     default: () => []
@@ -83,8 +87,6 @@ defineProps({
 
 const emit = defineEmits([
   'update:environment',
-  'update:runnerMode',
-  'update:tags',
-  'update:retries'
+  'update:tags'
 ])
 </script>

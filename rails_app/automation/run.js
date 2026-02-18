@@ -2,17 +2,42 @@ const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-
 function runTests(testFile) {
   const runId = new Date().toISOString().replace(/[:.]/g, '-');
   const startTime = Date.now();
   
-  const command = `npx playwright test ${testFile}`;
+  // Read environment variables
+  const retries = process.env.PW_RETRIES || '2';
+  const headed = process.env.PW_HEADED === 'true';
+  const testRunId = process.env.TEST_RUN_ID || runId;
+  const environment = process.env.ENVIRONMENT || 'QA';
+  
+  // Build command with retries and headed/headless mode
+  let command = `npx playwright test ${testFile}`;
+  if (headed) {
+    command += ' --headed';
+  }
+  
+  console.log('\n' + '='.repeat(60));
+  console.log('Test Execution Configuration:');
+  console.log(`  Test File: ${testFile}`);
+  console.log(`  Environment: ${environment}`);
+  console.log(`  Runner Mode: ${headed ? 'headed' : 'headless'}`);
+  console.log(`  Retries: ${retries}`);
+  console.log(`  Test Run ID: ${testRunId}`);
+  console.log(`  Command: ${command}`);
+  console.log('='.repeat(60) + '\n');
 
   return new Promise((resolve) => {
     const childProcess = exec(command, {
       cwd: __dirname,
-      maxBuffer: 10 * 1024 * 1024
+      maxBuffer: 10 * 1024 * 1024,
+      env: {
+        ...process.env,
+        PW_RETRIES: retries,
+        TEST_RUN_ID: testRunId,
+        ENVIRONMENT: environment
+      }
     });
 
     childProcess.stdout.on('data', (data) => {
@@ -35,13 +60,16 @@ function runTests(testFile) {
       const outputDir = latestRun ? path.join(artifactsDir, latestRun) : null;
 
       const result = {
-        runId: runId,
+        runId: testRunId,
         success: exitCode === 0,
         exitCode: exitCode,
         testFile: testFile,
         duration: parseFloat(duration),
         outputDir: outputDir,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        environment: environment,
+        runnerMode: headed ? 'headed' : 'headless',
+        retries: parseInt(retries)
       };
 
       if (outputDir) {
@@ -62,10 +90,15 @@ function runTests(testFile) {
       }
 
       console.log('\n' + '='.repeat(60));
-      console.log(`Duration: ${duration}s`);
-      console.log(`Exit Code: ${exitCode}`);
+      console.log('Test Execution Summary:');
+      console.log(`  Duration: ${duration}s`);
+      console.log(`  Exit Code: ${exitCode}`);
+      console.log(`  Status: ${exitCode === 0 ? 'PASSED ✓' : 'FAILED ✗'}`);
+      console.log(`  Environment: ${environment}`);
+      console.log(`  Runner Mode: ${headed ? 'headed' : 'headless'}`);
+      console.log(`  Retries Used: ${retries}`);
       if (result.stats) {
-        console.log(`Tests: ${result.stats.passed} passed, ${result.stats.failed} failed, ${result.stats.total} total`);
+        console.log(`  Tests: ${result.stats.passed} passed, ${result.stats.failed} failed, ${result.stats.total} total`);
       }
       console.log('='.repeat(60));
       
@@ -79,12 +112,15 @@ function runTests(testFile) {
     childProcess.on('error', (error) => {
       console.error('Error:', error.message);
       const result = {
-        runId: runId,
+        runId: testRunId,
         success: false,
         exitCode: 1,
         testFile: testFile,
         error: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        environment: environment,
+        runnerMode: headed ? 'headed' : 'headless',
+        retries: parseInt(retries)
       };
       
       console.log('\n---RESULT---');
@@ -161,6 +197,11 @@ if (require.main === module) {
     console.error('Error: Please provide a test file');
     console.error('Usage: node run.js <test-file>');
     console.error('Example: node run.js login.spec.js');
+    console.error('\nEnvironment Variables:');
+    console.error('  PW_RETRIES - Number of retries (default: 2)');
+    console.error('  PW_HEADED - Run in headed mode (default: false)');
+    console.error('  TEST_RUN_ID - Test run identifier');
+    console.error('  ENVIRONMENT - Test environment (QA, DEV, etc.)');
     process.exit(1);
   }
 
@@ -184,12 +225,15 @@ if (require.main === module) {
     .catch((error) => {
       console.error('Fatal error:', error);
       const errorResult = {
-        runId: new Date().toISOString().replace(/[:.]/g, '-'),
+        runId: process.env.TEST_RUN_ID || new Date().toISOString().replace(/[:.]/g, '-'),
         success: false,
         exitCode: 1,
         testFile: testFile,
         error: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        environment: process.env.ENVIRONMENT || 'QA',
+        runnerMode: process.env.PW_HEADED === 'true' ? 'headed' : 'headless',
+        retries: parseInt(process.env.PW_RETRIES || '2')
       };
       console.log(JSON.stringify(errorResult));
       process.exit(0);

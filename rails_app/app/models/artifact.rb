@@ -1,6 +1,5 @@
 class Artifact < ApplicationRecord
   belongs_to :test_run
-  has_one_attached :file
 
   enum kind: {
     screenshot: 'screenshot',
@@ -10,5 +9,6 @@ class Artifact < ApplicationRecord
   }
 
   validates :kind, presence: true
+  validates :file_url, presence: true, unless: :error_log?
 end
 

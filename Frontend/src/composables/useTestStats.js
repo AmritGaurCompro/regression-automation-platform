@@ -2,15 +2,15 @@ import { computed } from 'vue'
 
 export function useTestStats(tests) {
   const passCnt = computed(() =>
-    tests.value.filter(t => t.status === 'PASS').length
+    tests.value.filter(t => t.status === 'passed').length
   )
 
   const failCnt = computed(() =>
-    tests.value.filter(t => t.status === 'FAIL').length
+    tests.value.filter(t => t.status === 'failed').length
   )
 
-  const notRunCnt = computed(() =>
-    tests.value.filter(t => t.status === 'NEW').length
+  const runCnt = computed(() =>
+    tests.value.filter(t => t.status === 'running').length
   )
 
   const totalCnt = computed(() => tests.value.length)
@@ -18,7 +18,7 @@ export function useTestStats(tests) {
   return {
     passCnt,
     failCnt,
-    notRunCnt,
+    runCnt,
     totalCnt
   }
 }

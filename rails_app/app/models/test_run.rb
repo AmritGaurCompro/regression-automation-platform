@@ -10,7 +10,7 @@ class TestRun < ApplicationRecord
   MAX_RETRIES  = 4
 
   enum status: {
-    not_run: "not_run",
+    running: "running",
     passed:  "passed",
     failed:  "failed"
   }
