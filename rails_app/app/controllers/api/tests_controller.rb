@@ -1,4 +1,3 @@
-# app/controllers/api/tests_controller.rb
 class Api::TestsController < ApplicationController
   SCRIPTS_DIR = Rails.root.join('automation', 'tests')
 
@@ -64,8 +63,7 @@ class Api::TestsController < ApplicationController
   def load_script_content(script_id)
     return nil if script_id.blank?
     
-    # Assuming script_id corresponds to a filename or you have a Script model
-    # Option 1: If script_id is the filename (e.g., 1 = login.spec.js, 2 = navigation.spec.js)
+    
     script_files = ['login.spec.js', 'navigation.spec.js', 'redeem_code.spec.js']
     filename = script_files[script_id - 1]
     

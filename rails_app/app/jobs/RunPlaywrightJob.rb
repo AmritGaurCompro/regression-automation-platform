@@ -9,7 +9,7 @@ class RunPlaywrightJob < ApplicationJob
     script_path = Rails.root.join('automation/run.js')
     spec_name = "#{test.title}.spec.js"
     
-    # Build environment variables
+    
     env_vars = {
       'PW_RETRIES' => test_run.retries_on_failure.to_s,
       'PW_HEADED' => (test_run.runner_mode == 'headed').to_s,
@@ -17,7 +17,7 @@ class RunPlaywrightJob < ApplicationJob
       'ENVIRONMENT' => test_run.environment.to_s
     }
     
-    # Build command with environment variables
+    
     env_string = env_vars.map { |k, v| "#{k}=#{v}" }.join(' ')
     command = "#{env_string} #{node_path} #{script_path} #{spec_name} 2>&1"
     

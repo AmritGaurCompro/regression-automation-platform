@@ -31,4 +31,15 @@ Process.detach(pid)
       status: 'recording_started'
     }
   end
+
+def index
+  tests_dir = Rails.root.join('automation/tests')
+  
+  files = Dir.glob(tests_dir.join('*.spec.js')).map do |file|
+    { name: File.basename(file), path: file }
+  end
+
+  render json: files
+end
+  
 end
