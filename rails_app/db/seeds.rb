@@ -3,19 +3,43 @@
 
 puts "🌱 Seeding database..."
 
-# Create sample tests
+# Create scripts first (Tests require scripts)
+scripts = Script.create!([
+  {
+    name: 'login.spec.js',
+    raw_content: 'test("login test", async () => { /* test code */ });',
+    normalized_content: 'test("login test", async () => { /* test code */ });',
+    language: 'javascript'
+  },
+  {
+    name: 'navigation.spec.js',
+    raw_content: 'test("navigation test", async () => { /* test code */ });',
+    normalized_content: 'test("navigation test", async () => { /* test code */ });',
+    language: 'javascript'
+  },
+  {
+    name: 'redeem_code.spec.js',
+    raw_content: 'test("redeem code test", async () => { /* test code */ });',
+    normalized_content: 'test("redeem code test", async () => { /* test code */ });',
+    language: 'javascript'
+  }
+])
+
+puts "✅ Created #{Script.count} scripts"
+
+# Create tests linked to scripts
 Test.create!([
   {
-    name: 'Login Test',
-    description: 'Tests user login functionality'
+    title: 'Login Test',
+    script: scripts[0]
   },
   {
-    name: 'Navigation Test',
-    description: 'Tests navigation between pages'
+    title: 'Navigation Test',
+    script: scripts[1]
   },
   {
-    name: 'Redeem Code Test',
-    description: 'Tests code redemption feature'
+    title: 'Redeem Code Test',
+    script: scripts[2]
   }
 ])
 
