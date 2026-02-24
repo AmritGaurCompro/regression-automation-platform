@@ -90,15 +90,15 @@ puts "✅ Created #{Script.count} scripts"
 # Create tests linked to scripts
 Test.create!([
   {
-    title: 'Login Test',
+    title: 'login',
     script: login_script
   },
   {
-    title: 'Navigation Test',
+    title: 'navigation',
     script: navigation_script
   },
   {
-    title: 'Redeem Code Test',
+    title: 'redeem_code',
     script: redeem_script
   }
 ])
