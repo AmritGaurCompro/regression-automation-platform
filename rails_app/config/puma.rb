@@ -21,6 +21,9 @@ port ENV.fetch("PORT") { 3000 }
 #
 environment ENV.fetch("RAILS_ENV") { "development" }
 
+# Bind to all interfaces in production (required for Render and other cloud platforms)
+bind "tcp://0.0.0.0:#{ENV.fetch('PORT') { 3000 }}"
+
 # Specifies the `pidfile` that Puma will use.
 pidfile ENV.fetch("PIDFILE") { "tmp/pids/server.pid" }
 

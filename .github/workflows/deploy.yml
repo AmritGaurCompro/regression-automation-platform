@@ -1,0 +1,43 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches:
+      - QA  
+
+permissions:
+  deployments: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy Backend Rails App to QA
+    runs-on: ubuntu-latest
+    environment:
+      name: qa
+      url: 
+    steps:
+      - name: Start Deployment
+        uses: bobheadxi/deployments@v1
+        id: deployment
+        with:
+          step: start
+          token: ${{ secrets.GITHUB_TOKEN }}
+          env: qa
+      
+      - name: Trigger Render Deploy
+        run: |
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+      
+      - name: Wait for deployment
+        run: sleep 30
+      
+      - name: Update Deployment Status
+        uses: bobheadxi/deployments@v1
+        if: always()
+        with:
+          step: finish
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}
+          env: ${{ steps.deployment.outputs.env }}
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
