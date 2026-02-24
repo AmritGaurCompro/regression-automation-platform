@@ -3,7 +3,11 @@ name: Deploy to Render
 on:
   push:
     branches:
-      - QA  
+      - QA
+    paths:
+      - 'rails_app/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
 
 permissions:
   deployments: write
@@ -15,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: qa
-      url: 
+      url: https://regression-automation-platform.onrender.com
     steps:
       - name: Start Deployment
         uses: bobheadxi/deployments@v1
@@ -27,10 +31,33 @@ jobs:
       
       - name: Trigger Render Deploy
         run: |
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+          echo "🚀 Triggering deployment to Render..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}")
+          if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 201 ]; then
+            echo "✅ Deployment triggered successfully"
+          else
+            echo "❌ Failed with HTTP code: $HTTP_CODE"
+            exit 1
+          fi
       
       - name: Wait for deployment
-        run: sleep 30
+        run: |
+          echo "⏳ Waiting for Render to build and deploy..."
+          echo "This includes: bundle install, db:migrate, and server start"
+          sleep 90
+      
+      - name: Verify Health
+        run: |
+          echo "🔍 Checking backend health..."
+          for i in {1..5}; do
+            if curl -f -s https://regression-automation-platform.onrender.com/health > /dev/null 2>&1; then
+              echo "✅ Backend is healthy!"
+              exit 0
+            fi
+            echo "Attempt $i failed, waiting 15 seconds..."
+            sleep 15
+          done
+          echo "⚠️ Health check timeout, check Render logs manually"
       
       - name: Update Deployment Status
         uses: bobheadxi/deployments@v1
