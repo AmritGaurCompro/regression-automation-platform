@@ -4,26 +4,86 @@
 puts "🌱 Seeding database..."
 
 # Create scripts first (Tests require scripts)
-scripts = Script.create!([
-  {
-    name: 'login.spec.js',
-    raw_content: 'test("login test", async () => { /* test code */ });',
-    normalized_content: 'test("login test", async () => { /* test code */ });',
-    language: 'javascript'
-  },
-  {
-    name: 'navigation.spec.js',
-    raw_content: 'test("navigation test", async () => { /* test code */ });',
-    normalized_content: 'test("navigation test", async () => { /* test code */ });',
-    language: 'javascript'
-  },
-  {
-    name: 'redeem_code.spec.js',
-    raw_content: 'test("redeem code test", async () => { /* test code */ });',
-    normalized_content: 'test("redeem code test", async () => { /* test code */ });',
-    language: 'javascript'
-  }
-])
+login_script = Script.create!(
+  name: 'login.spec.js',
+  raw_content: %(import { test, expect } from '@playwright/test';
+
+test('test', async ({ page }) => {
+  await page.goto('https://www.writeyournote.com/auth/login');
+  await page.getByRole('textbox', { name: 'Email' }).click();
+  await page.getByRole('textbox', { name: 'Email' }).fill('student5@mailsac.com');
+  await page.getByRole('textbox', { name: 'Password' }).click();
+  await page.getByRole('textbox', { name: 'Password' }).fill('Compro111');
+  await page.getByRole('button', { name: 'Log In' }).click();
+  await page.getByRole('textbox', { name: 'Search' }).click();
+});),
+  normalized_content: %(import { test, expect } from '@playwright/test';
+
+test('test', async ({ page }) => {
+  await page.goto('https://www.writeyournote.com/auth/login');
+  await page.getByRole('textbox', { name: 'Email' }).click();
+  await page.getByRole('textbox', { name: 'Email' }).fill('student5@mailsac.com');
+  await page.getByRole('textbox', { name: 'Password' }).click();
+  await page.getByRole('textbox', { name: 'Password' }).fill('Compro111');
+  await page.getByRole('button', { name: 'Log In' }).click();
+  await page.getByRole('textbox', { name: 'Search' }).click();
+});),
+  language: 'javascript'
+)
+
+navigation_script = Script.create!(
+  name: 'navigation.spec.js',
+  raw_content: %(import { test, expect } from '@playwright/test';
+
+test('test', async ({ page }) => {
+  await page.goto('https://www.writeyournote.com/auth/login');
+  await page.getByRole('textbox', { name: 'Email' }).click();
+  await page.getByRole('textbox', { name: 'Email' }).fill('student5@mailsac.com');
+  await page.getByRole('textbox', { name: 'Password' }).click();
+  await page.getByRole('textbox', { name: 'Password' }).fill('Compro111');
+  await page.getByRole('button', { name: 'Log In' }).click();
+  await page.getByRole('textbox', { name: 'Search' }).click();
+});),
+  normalized_content: %(import { test, expect } from '@playwright/test';
+
+test('test', async ({ page }) => {
+  await page.goto('https://www.writeyournote.com/auth/login');
+  await page.getByRole('textbox', { name: 'Email' }).click();
+  await page.getByRole('textbox', { name: 'Email' }).fill('student5@mailsac.com');
+  await page.getByRole('textbox', { name: 'Password' }).click();
+  await page.getByRole('textbox', { name: 'Password' }).fill('Compro111');
+  await page.getByRole('button', { name: 'Log In' }).click();
+  await page.getByRole('textbox', { name: 'Search' }).click();
+});),
+  language: 'javascript'
+)
+
+redeem_script = Script.create!(
+  name: 'redeem_code.spec.js',
+  raw_content: %(import { test, expect } from '@playwright/test';
+
+test('test', async ({ page }) => {
+  await page.goto('https://www.writeyournote.com/auth/login');
+  await page.getByRole('textbox', { name: 'Email' }).click();
+  await page.getByRole('textbox', { name: 'Email' }).fill('student5@mailsac.com');
+  await page.getByRole('textbox', { name: 'Password' }).click();
+  await page.getByRole('textbox', { name: 'Password' }).fill('Compro11');
+  await page.getByRole('button', { name: 'Log In' }).click();
+  await page.getByRole('textbox', { name: 'Search' }).click();
+});),
+  normalized_content: %(import { test, expect } from '@playwright/test';
+
+test('test', async ({ page }) => {
+  await page.goto('https://www.writeyournote.com/auth/login');
+  await page.getByRole('textbox', { name: 'Email' }).click();
+  await page.getByRole('textbox', { name: 'Email' }).fill('student5@mailsac.com');
+  await page.getByRole('textbox', { name: 'Password' }).click();
+  await page.getByRole('textbox', { name: 'Password' }).fill('Compro11');
+  await page.getByRole('button', { name: 'Log In' }).click();
+  await page.getByRole('textbox', { name: 'Search' }).click();
+});),
+  language: 'javascript'
+)
 
 puts "✅ Created #{Script.count} scripts"
 
@@ -31,15 +91,15 @@ puts "✅ Created #{Script.count} scripts"
 Test.create!([
   {
     title: 'Login Test',
-    script: scripts[0]
+    script: login_script
   },
   {
     title: 'Navigation Test',
-    script: scripts[1]
+    script: navigation_script
   },
   {
     title: 'Redeem Code Test',
-    script: scripts[2]
+    script: redeem_script
   }
 ])
 
