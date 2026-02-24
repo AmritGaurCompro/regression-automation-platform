@@ -63,6 +63,7 @@ import { Input } from '@/components/ui/input'
 const open = ref(false)
 const fileName = ref('')
 const error = ref('')
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 
 const show = () => {
@@ -97,7 +98,7 @@ const save = async () => {
   const finalFileName = `${fileName.value}`
 
   try {
-    await axios.post('/api/record_tests', {
+    await axios.post(`${API_BASE_URL}/api/record_tests`, {
       title: finalFileName
     })
 

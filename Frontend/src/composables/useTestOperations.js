@@ -2,6 +2,7 @@ import { useTestStore } from '@/stores/testStore'
 import { useDateFormatter } from './useDateFormatter'
 import { storeToRefs } from 'pinia'
 import axios from 'axios'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 export function useTestOperations() {
   const testStore = useTestStore()
@@ -19,7 +20,7 @@ export function useTestOperations() {
     if (!id || !title) return
 
     await axios.post(
-      `/api/tests/${selectedTest.id}/test_runs`,
+      `${API_BASE_URL}/api/tests/${selectedTest.id}/test_runs`,
       {
          environment: selectedTest.environment,
         runner_mode: testRunConfig.value.runner_mode,
@@ -44,7 +45,7 @@ export function useTestOperations() {
     
 
     const res = await axios.post(
-      `/api/tests/${selectedTest.id}/test_runs`,
+      `${API_BASE_URL}/api/tests/${selectedTest.id}/test_runs`,
       {
         environment: selectedTest.environment,
         runner_mode: testRunConfig.value.runner_mode,

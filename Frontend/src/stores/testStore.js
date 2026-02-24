@@ -10,6 +10,8 @@ export const useTestStore = defineStore('test', () => {
   const testRuns = ref([])
   const pollingInterval = ref(null)
   const runEndTime = ref(null)
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
   
   // Test run configuration - shared between Sidebar and TestData
   const testRunConfig = ref({
@@ -19,7 +21,7 @@ export const useTestStore = defineStore('test', () => {
 
   async function refreshTestsFromBackend() {
     try {
-      const res = await axios.get('/api/tests')
+      const res = await axios.get(`${API_BASE_URL}/api/tests`)
       tests.value = res.data
       
       if (selectedTest.value) {
@@ -37,7 +39,7 @@ export const useTestStore = defineStore('test', () => {
   if (!testId) return
 
   try {
-    const res = await axios.get(`/api/tests/${testId}/test_runs`)
+    const res = await axios.get(`${API_BASE_URL}/api/tests/${testId}/test_runs`)
     testRuns.value = res.data
   } catch (err) {
     console.error("Failed to fetch test runs:", err)
