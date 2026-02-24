@@ -103,5 +103,6 @@ Test.create!([
   }
 ])
 
-puts "✅ Created #{Test.count} tests"
-puts "🎉 Seeding completed!"
+puts "Created #{Test.count} tests"
+puts "Seeding completed!"
+
