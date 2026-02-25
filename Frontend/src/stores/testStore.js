@@ -23,6 +23,9 @@ export const useTestStore = defineStore('test', () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/api/tests`)
       tests.value = res.data
+
+       console.log('script field from API:', res.data[0]?.script)
+    console.log('type:', typeof res.data[0]?.script)
       
       if (selectedTest.value) {
         const updated = res.data.find(t => t.id === selectedTest.value.id)
