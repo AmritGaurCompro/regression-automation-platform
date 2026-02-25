@@ -11,7 +11,12 @@ on:
         description: 'Branch to checkout and commit back to'
         required: true
         default: 'QA'
-
+push:
+    branches:
+      - QA
+    paths:
+      - 'rails_app/**'
+      - '.github/workflows/record.yml'
 jobs:
   record:
     runs-on: ubuntu-latest

@@ -14,7 +14,12 @@ on:
         description: 'Number of retries on failure'
         required: false
         default: '2'
-
+push:
+    branches:
+      - QA
+    paths:
+      - 'rails_app/**'
+      - '.github/workflows/run-headless.yml'
 jobs:
   run-headless:
     runs-on: ubuntu-latest
