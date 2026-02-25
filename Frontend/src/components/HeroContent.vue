@@ -38,6 +38,14 @@ const retries = computed({
   set: val => (selectedTest.value.retries_on_failure = val)
 })
 
+
+const decodeHtmlEntities = (text) => {
+  if (!text) return text
+  const textarea = document.createElement('textarea')
+  textarea.innerHTML = text
+  return textarea.value
+}
+
 const rawScriptContent = computed(() => {
   const script = selectedTest.value?.script
   if (!script) return '// No script available'
@@ -63,14 +71,6 @@ const normalizedScriptContent = computed(() => {
   
   return '// No normalized script available'
 })
-
-// Helper function to decode HTML entities
-const decodeHtmlEntities = (text) => {
-  if (!text) return text
-  const textarea = document.createElement('textarea')
-  textarea.innerHTML = text
-  return textarea.value
-}
 
 const scriptFilename = computed(() => selectedTest.value?.script_filename || `${selectedTest.value?.title}.spec.js`)
 
