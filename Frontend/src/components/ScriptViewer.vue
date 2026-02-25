@@ -55,7 +55,7 @@
 
     <!-- Code -->
     <pre class="overflow-auto px-6 py-4 text-sm bg-[rgb(13_17_23)]">
-      <code>{{ rawScript }}</code>
+      <code>{{ displayedScript }}</code>
     </pre>
 
     <!-- Footer -->
