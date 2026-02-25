@@ -41,6 +41,7 @@ const retries = computed({
 const rawScriptContent = computed(() => selectedTest.value?.script?.raw || '// No script available')
 const normalizedScriptContent = computed(() => selectedTest.value?.script?.normalized || '// No normalized script available')
 const scriptFilename = computed(() => selectedTest.value?.script_filename || `${selectedTest.value?.title}.spec.js`)
+
 </script>
 
 <template>

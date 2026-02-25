@@ -63,6 +63,7 @@ class Api::TestsController < ApplicationController
   def load_script_content(script_id)
     return { raw: nil, normalized: nil } if script_id.blank?
     
+    
     script = Script.find_by(id: script_id)
     return { raw: nil, normalized: nil } unless script
     
