@@ -1,27 +1,27 @@
 class Api::TestRunsController < ApplicationController
-    
-def index
-  test = Test.find(params[:test_id])
 
-  runs = test.test_runs
-             .order(created_at: :desc)
-             .limit(5)
+  def index
+    test = Test.find(params[:test_id])
 
-  render json: runs.map { |run|
-    {
-      id: run.id,
-      test_id: run.test_id,
-      status: run.status,
-      environment: run.environment,
-      runner_mode: run.runner_mode,
-      retries_on_failure: run.retries_on_failure,
-      started_at: run.started_at,
-      finished_at: run.finished_at,
-      created_at: run.created_at,
-      duration: calculate_duration(run)   
+    runs = test.test_runs
+               .order(created_at: :desc)
+               .limit(5)
+
+    render json: runs.map { |run|
+      {
+        id:                 run.id,
+        test_id:            run.test_id,
+        status:             run.status,
+        environment:        run.environment,
+        runner_mode:        run.runner_mode,
+        retries_on_failure: run.retries_on_failure,
+        started_at:         run.started_at,
+        finished_at:        run.finished_at,
+        created_at:         run.created_at,
+        duration:           calculate_duration(run)
+      }
     }
-  }
-end
+  end
 
   def show
     test_run = TestRun.find(params[:id])
@@ -31,26 +31,37 @@ end
   def create
     test = Test.find(params[:test_id])
 
+    # runner_mode comes from UI — 'headed' or 'headless'
+    # On deployed: RunPlaywrightJob uses this to pick run-headed.yml or run-headless.yml
+    # Locally: RunPlaywrightJob uses this to set PW_HEADED env var — unchanged
+    runner_mode = params[:runner_mode] || "headless"
+
     test_run = test.test_runs.create!(
-      script_id: test.script_id,
-      environment: params[:environment] || "QA",
-      runner_mode: params[:runner_mode] || "headless",
+      script_id:          test.script_id,
+      environment:        params[:environment] || "QA",
+      runner_mode:        runner_mode,
       retries_on_failure: params[:retries_on_failure] || 0,
-      status: "running",
-      started_at: Time.current,
-      tags: params[:tags] || "default"
+      status:             "running",
+      started_at:         Time.current,
+      tags:               params[:tags] || "default"
     )
 
     RunPlaywrightJob.perform_later(test_run.id)
 
     render json: {
       test_run_id: test_run.id,
-      status: test_run.status
+      status:      test_run.status,
+      runner_mode: runner_mode,
+      # On deployed: GH Actions handles execution, status updated via webhook when done
+      # Locally: job runs synchronously and updates status directly
+      message: Rails.env.production? || Rails.env.staging? ?
+        "Test queued on GitHub Actions (#{runner_mode} mode)" :
+        "Test started locally (#{runner_mode} mode)"
     }, status: :created
   end
-  
-  
-  
+
+  private
+
   def calculate_duration(test_run)
     return nil unless test_run&.created_at && test_run&.updated_at
 
@@ -64,5 +75,4 @@ end
       "#{minutes}m #{seconds}s"
     end
   end
-
 end

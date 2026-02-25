@@ -7,5 +7,7 @@ Rails.application.routes.draw do
     resources :tests do
       resources :test_runs, only: [:index, :create, :show]      
     end
+    post 'artifacts/webhook', to: 'artifacts#webhook'
+    post 'artifacts/status',  to: 'artifacts#status'
   end
 end
