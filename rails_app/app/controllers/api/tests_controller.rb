@@ -28,7 +28,7 @@ class Api::TestsController < ApplicationController
       }
     end
 
-    render json: data
+    render json: data.to_json, content_type: 'application/json'
   end
 
   def show
@@ -55,7 +55,7 @@ class Api::TestsController < ApplicationController
       end || []
     }
 
-    render json: data
+    render json: data.to_json, content_type: 'application/json'
   end
 
   private
