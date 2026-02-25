@@ -1,4 +1,4 @@
-name: 🎬 Playwright Record (codegen)
+name: Playwright Record (codegen)
 
 on:
   workflow_dispatch:
@@ -6,31 +6,31 @@ on:
       file_name:
         description: 'Test file name (must end with .spec.js)'
         required: true
-        default: 'my_test.spec.js'
       branch:
         description: 'Branch to checkout and commit back to'
         required: true
         default: 'QA'
-push:
+  push:
     branches:
       - QA
     paths:
       - 'rails_app/**'
       - '.github/workflows/record.yml'
+
 jobs:
   record:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repo (latest from selected branch)
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_PAT }}
-          ref: ${{ github.event.inputs.branch }}   # dynamic branch
+          ref: ${{ github.event.inputs.branch || 'QA' }}
           fetch-depth: 1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
@@ -49,7 +49,7 @@ jobs:
         run: |
           Xvfb :99 -screen 0 1280x720x24 &
           sleep 2
-          echo "✅ Xvfb started on display :99"
+          echo "Xvfb started on display :99"
 
       - name: Start VNC server on virtual display
         run: x11vnc -display :99 -forever -nopw -bg -quiet
@@ -69,17 +69,16 @@ jobs:
           if tunnels:
               url = tunnels[0]['public_url'].replace('tcp://', '')
               print('====================================================')
-              print('🖥️  VNC URL (open in VNC Viewer app):')
+              print('VNC URL (open in VNC Viewer app):')
               print(f'   {url}')
               print('====================================================')
-              print('Steps:')
               print('1. Download RealVNC Viewer (free) on your machine')
               print('2. Paste the above URL into VNC Viewer')
-              print('3. You will see the browser — interact with it')
+              print('3. You will see the browser - interact with it')
               print('4. When done, close the browser window')
               print('5. The test file will be auto-committed to your branch')
           else:
-              print('❌ No tunnels found')
+              print('No tunnels found')
           "
 
       - name: Run Playwright codegen (record)
@@ -87,19 +86,16 @@ jobs:
         env:
           DISPLAY: ':99'
         run: node record.js record ${{ github.event.inputs.file_name }}
-        # ↑ record.js duplicate file check runs here against the checked-out branch
-        # ↑ codegen opens on :99 display — visible via VNC viewer
 
       - name: Verify generated test file exists
         working-directory: rails_app/automation
         run: |
           FILE="tests/${{ github.event.inputs.file_name }}"
           if [ -f "$FILE" ]; then
-            echo "✅ Generated test file found: $FILE"
-            echo "--- File contents ---"
+            echo "Generated test file found: $FILE"
             cat "$FILE"
           else
-            echo "❌ Test file not found — was the browser closed without recording?"
+            echo "Test file not found"
             exit 1
           fi
 
@@ -108,6 +104,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add rails_app/automation/tests/${{ github.event.inputs.file_name }}
-          git diff --staged --quiet && echo "⚠️ No changes to commit" || \
-          git commit -m "🤖 chore: add generated playwright test [${{ github.event.inputs.file_name }}]"
-          git push origin ${{ github.event.inputs.branch }}
+          git diff --staged --quiet && echo "No changes to commit" || \
+          git commit -m "chore: add generated playwright test [${{ github.event.inputs.file_name }}]"
+          git push origin ${{ github.event.inputs.branch || 'QA' }}

@@ -1,4 +1,4 @@
-name: 🖥️ Playwright Run (Headed via Xvfb)
+name: Playwright Run (Headed via Xvfb)
 
 on:
   workflow_dispatch:
@@ -20,16 +20,17 @@ on:
     paths:
       - 'rails_app/**'
       - '.github/workflows/run-headed.yml'
+
 jobs:
   run-headed:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
@@ -48,7 +49,7 @@ jobs:
         run: |
           Xvfb :99 -screen 0 1280x720x24 &
           sleep 2
-          echo "✅ Xvfb started on display :99"
+          echo "Xvfb started on display :99"
 
       - name: Run Playwright tests (headed via Xvfb)
         working-directory: rails_app/automation
@@ -62,7 +63,7 @@ jobs:
         run: node run.js ${{ github.event.inputs.test_file }}
 
       - name: Upload artifacts to Cloudinary + notify Rails
-        if: always()   # run even if tests fail so artifacts are never lost
+        if: always()
         working-directory: rails_app/automation
         env:
           RAILS_API_URL: ${{ secrets.RENDER_URL }}
@@ -73,7 +74,7 @@ jobs:
 
       - name: Upload raw artifacts to GH Actions (backup)
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-artifacts-headed
           path: rails_app/automation/artifacts/
