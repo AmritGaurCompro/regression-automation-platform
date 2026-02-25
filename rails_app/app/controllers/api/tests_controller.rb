@@ -61,21 +61,18 @@ class Api::TestsController < ApplicationController
   private
 
   def load_script_content(script_id)
-    return nil if script_id.blank?
+    return { raw: nil, normalized: nil } if script_id.blank?
     
+    script = Script.find_by(id: script_id)
+    return { raw: nil, normalized: nil } unless script
     
-    script_files = ['login.spec.js', 'navigation.spec.js', 'redeem_code.spec.js']
-    filename = script_files[script_id - 1]
-    
-    return nil if filename.blank?
-    
-    script_path = SCRIPTS_DIR.join(filename)
-    return nil unless File.exist?(script_path)
-    
-    File.read(script_path)
+    {
+      raw: script.raw_content,
+      normalized: script.normalized_content
+    }
   rescue StandardError => e
     Rails.logger.error("Error loading script #{script_id}: #{e.message}")
-    nil
+    { raw: nil, normalized: nil }
   end
 
   def calculate_duration(test_run)

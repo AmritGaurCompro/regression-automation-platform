@@ -38,7 +38,8 @@ const retries = computed({
   set: val => (selectedTest.value.retries_on_failure = val)
 })
 
-const rawScriptContent = computed(() => selectedTest.value?.script || '// No script available')
+const rawScriptContent = computed(() => selectedTest.value?.script?.raw || '// No script available')
+const normalizedScriptContent = computed(() => selectedTest.value?.script?.normalized || '// No normalized script available')
 const scriptFilename = computed(() => selectedTest.value?.script_filename || `${selectedTest.value?.title}.spec.js`)
 </script>
 
@@ -71,7 +72,7 @@ const scriptFilename = computed(() => selectedTest.value?.script_filename || `${
     <ScriptViewer
       v-if="selectedTest"
       :rawScript="rawScriptContent"
-      :scriptFilename="scriptFilename"
+      :normalizedScript="normalizedScriptContent"
     />
     
     <RunResult v-if="selectedTest" />
