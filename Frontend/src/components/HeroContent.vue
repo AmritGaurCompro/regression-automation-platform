@@ -42,11 +42,10 @@ const rawScriptContent = computed(() => {
   const script = selectedTest.value?.script
   if (!script) return '// No script available'
   
- 
-  if (typeof script === 'string') return script
+  if (typeof script === 'string') return decodeHtmlEntities(script)
   
   if (typeof script === 'object' && script.raw !== undefined) {
-    return script.raw || '// No raw script available'
+    return decodeHtmlEntities(script.raw) || '// No raw script available'
   }
   
   return '// No script available'
@@ -56,14 +55,22 @@ const normalizedScriptContent = computed(() => {
   const script = selectedTest.value?.script
   if (!script) return '// No normalized script available'
   
-  if (typeof script === 'string') return script
+  if (typeof script === 'string') return decodeHtmlEntities(script)
   
   if (typeof script === 'object' && script.normalized !== undefined) {
-    return script.normalized || '// No normalized script available'
+    return decodeHtmlEntities(script.normalized) || '// No normalized script available'
   }
   
   return '// No normalized script available'
 })
+
+// Helper function to decode HTML entities
+const decodeHtmlEntities = (text) => {
+  if (!text) return text
+  const textarea = document.createElement('textarea')
+  textarea.innerHTML = text
+  return textarea.value
+}
 
 const scriptFilename = computed(() => selectedTest.value?.script_filename || `${selectedTest.value?.title}.spec.js`)
 
