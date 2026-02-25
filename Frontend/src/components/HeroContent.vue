@@ -38,8 +38,33 @@ const retries = computed({
   set: val => (selectedTest.value.retries_on_failure = val)
 })
 
-const rawScriptContent = computed(() => selectedTest.value?.script?.raw || '// No script available')
-const normalizedScriptContent = computed(() => selectedTest.value?.script?.normalized || '// No normalized script available')
+const rawScriptContent = computed(() => {
+  const script = selectedTest.value?.script
+  if (!script) return '// No script available'
+  
+ 
+  if (typeof script === 'string') return script
+  
+  if (typeof script === 'object' && script.raw !== undefined) {
+    return script.raw || '// No raw script available'
+  }
+  
+  return '// No script available'
+})
+
+const normalizedScriptContent = computed(() => {
+  const script = selectedTest.value?.script
+  if (!script) return '// No normalized script available'
+  
+  if (typeof script === 'string') return script
+  
+  if (typeof script === 'object' && script.normalized !== undefined) {
+    return script.normalized || '// No normalized script available'
+  }
+  
+  return '// No normalized script available'
+})
+
 const scriptFilename = computed(() => selectedTest.value?.script_filename || `${selectedTest.value?.title}.spec.js`)
 
 </script>
