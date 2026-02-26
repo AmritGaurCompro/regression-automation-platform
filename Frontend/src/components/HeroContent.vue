@@ -93,12 +93,23 @@ watchEffect(() => {
   console.groupEnd()
 })
 
+// visible debug — remove after production issue confirmed resolved
+const debugInfo = computed(() => {
+  if (!selectedTest.value) return 'selectedTest is NULL — API call likely failing'
+  const script = selectedTest.value.script
+  return `type=${typeof script} | value=${JSON.stringify(script)?.slice(0, 200)}`
+})
+
 
 
 </script>
 
 <template>
   <div class="w-full mt-5 lg:mt-0 lg:ml-10 lg:w-[75%] rounded-xl space-y-6 bg-[#161b26]">
+    <!-- TEMP DEBUG BANNER — remove after production diagnosis -->
+    <div class="text-xs bg-yellow-900 text-yellow-200 px-4 py-2 rounded break-all">
+      🔍 {{ debugInfo }}
+    </div>
     <HeadingBar
       v-if="selectedTest"
       :title="selectedTest.title"
