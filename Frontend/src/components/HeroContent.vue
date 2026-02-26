@@ -11,7 +11,6 @@ import RunResult from '@/components/RunResult.vue'
 const testStore = useTestStore()
 const { selectedTest } = storeToRefs(testStore)
 
-// Test-level properties (from Test model)
 const environment = computed({
   get: () => selectedTest.value?.environment || '',
   set: val => (selectedTest.value.environment = val)
@@ -46,33 +45,49 @@ const decodeHtmlEntities = (text) => {
   return textarea.value
 }
 
+const parseScript = (script) => {
+  if (!script) return null
+  if (typeof script === 'object') return script
+  if (typeof script === 'string') {
+    try {
+      const parsed = JSON.parse(script)
+      if (typeof parsed === 'object') return parsed
+    } catch {
+    
+    }
+  }
+  return null
+}
+
 const rawScriptContent = computed(() => {
   const script = selectedTest.value?.script
   if (!script) return '// No script available'
-  
+
+  const parsed = parseScript(script)
+  if (parsed) return decodeHtmlEntities(parsed.raw) || '// No raw script available'
+
+  // plain string fallback
   if (typeof script === 'string') return decodeHtmlEntities(script)
-  
-  if (typeof script === 'object' && script.raw !== undefined) {
-    return decodeHtmlEntities(script.raw) || '// No raw script available'
-  }
-  
+
   return '// No script available'
 })
 
 const normalizedScriptContent = computed(() => {
   const script = selectedTest.value?.script
   if (!script) return '// No normalized script available'
-  
+
+  const parsed = parseScript(script)
+  if (parsed) return decodeHtmlEntities(parsed.normalized) || '// No normalized script available'
+
+  // plain string fallback
   if (typeof script === 'string') return decodeHtmlEntities(script)
-  
-  if (typeof script === 'object' && script.normalized !== undefined) {
-    return decodeHtmlEntities(script.normalized) || '// No normalized script available'
-  }
-  
+
   return '// No normalized script available'
 })
 
 const scriptFilename = computed(() => selectedTest.value?.script_filename || `${selectedTest.value?.title}.spec.js`)
+
+
 
 </script>
 

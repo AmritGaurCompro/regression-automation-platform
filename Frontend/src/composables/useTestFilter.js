@@ -8,11 +8,10 @@ export function useTestFilter(tests, searchQuery) {
 
     const query = searchQuery.value.trim().toLowerCase()
     return tests.value.filter(test => {
-      return (
-        test.title.toLowerCase().includes(query) ||
-        test.environment.toLowerCase().includes(query) ||
-        test.tags.some(tag => tag.toLowerCase().includes(query))
-      )
+      const titleMatch = test.title?.toLowerCase().includes(query)
+      const envMatch = test.environment?.toLowerCase().includes(query)
+      const tagMatch = Array.isArray(test.tags) && test.tags.some(tag => tag?.toLowerCase().includes(query))
+      return titleMatch || envMatch || tagMatch
     })
   })
 
