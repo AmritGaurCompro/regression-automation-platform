@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watchEffect } from 'vue'
 import { useTestStore } from '@/stores/testStore'
 import { storeToRefs } from 'pinia'
 
@@ -39,53 +39,59 @@ const retries = computed({
 
 
 const decodeHtmlEntities = (text) => {
-  if (!text) return text
+  if (!text || typeof text !== 'string' || !text.trim()) return null
   const textarea = document.createElement('textarea')
   textarea.innerHTML = text
-  return textarea.value
+  return textarea.value.trim() || null
 }
 
-const parseScript = (script) => {
-  if (!script) return null
-  if (typeof script === 'object') return script
-  if (typeof script === 'string') {
+const extractScriptParts = (script) => {
+  // already a proper object from axios JSON parsing
+  if (script && typeof script === 'object' && !Array.isArray(script)) {
+    return { raw: script.raw ?? null, normalized: script.normalized ?? null }
+  }
+  // string — try JSON.parse in case it was double-encoded
+  if (typeof script === 'string' && script.trim()) {
     try {
       const parsed = JSON.parse(script)
-      if (typeof parsed === 'object') return parsed
+      if (parsed && typeof parsed === 'object') {
+        return { raw: parsed.raw ?? null, normalized: parsed.normalized ?? null }
+      }
     } catch {
-    
+      // plain script string (old backend format) — treat as raw
+      return { raw: script, normalized: script }
     }
   }
-  return null
+  return { raw: null, normalized: null }
 }
 
 const rawScriptContent = computed(() => {
   const script = selectedTest.value?.script
   if (!script) return '// No script available'
-
-  const parsed = parseScript(script)
-  if (parsed) return decodeHtmlEntities(parsed.raw) || '// No raw script available'
-
-  // plain string fallback
-  if (typeof script === 'string') return decodeHtmlEntities(script)
-
-  return '// No script available'
+  const { raw } = extractScriptParts(script)
+  return decodeHtmlEntities(raw) || '// No raw script available'
 })
 
 const normalizedScriptContent = computed(() => {
   const script = selectedTest.value?.script
   if (!script) return '// No normalized script available'
-
-  const parsed = parseScript(script)
-  if (parsed) return decodeHtmlEntities(parsed.normalized) || '// No normalized script available'
-
-  // plain string fallback
-  if (typeof script === 'string') return decodeHtmlEntities(script)
-
-  return '// No normalized script available'
+  const { normalized } = extractScriptParts(script)
+  return decodeHtmlEntities(normalized) || '// No normalized script available'
 })
 
 const scriptFilename = computed(() => selectedTest.value?.script_filename || `${selectedTest.value?.title}.spec.js`)
+
+// — debug: remove once production issue is confirmed resolved —
+watchEffect(() => {
+  if (!selectedTest.value) return
+  const script = selectedTest.value.script
+  console.group('[ScriptViewer Debug]')
+  console.log('script field type :', typeof script)
+  console.log('script field value:', script)
+  console.log('rawScriptContent  :', rawScriptContent.value?.slice(0, 120))
+  console.log('normalizedScript  :', normalizedScriptContent.value?.slice(0, 120))
+  console.groupEnd()
+})
 
 
 
