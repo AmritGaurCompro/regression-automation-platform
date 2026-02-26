@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watchEffect } from 'vue'
+import { computed, ref } from 'vue'
 import { useTestStore } from '@/stores/testStore'
 import { storeToRefs } from 'pinia'
 
@@ -81,35 +81,12 @@ const normalizedScriptContent = computed(() => {
 
 const scriptFilename = computed(() => selectedTest.value?.script_filename || `${selectedTest.value?.title}.spec.js`)
 
-// — debug: remove once production issue is confirmed resolved —
-watchEffect(() => {
-  if (!selectedTest.value) return
-  const script = selectedTest.value.script
-  console.group('[ScriptViewer Debug]')
-  console.log('script field type :', typeof script)
-  console.log('script field value:', script)
-  console.log('rawScriptContent  :', rawScriptContent.value?.slice(0, 120))
-  console.log('normalizedScript  :', normalizedScriptContent.value?.slice(0, 120))
-  console.groupEnd()
-})
-
-// visible debug — remove after production issue confirmed resolved
-const debugInfo = computed(() => {
-  if (!selectedTest.value) return 'selectedTest is NULL — API call likely failing'
-  const script = selectedTest.value.script
-  return `type=${typeof script} | value=${JSON.stringify(script)?.slice(0, 200)}`
-})
-
 
 
 </script>
 
 <template>
   <div class="w-full mt-5 lg:mt-0 lg:ml-10 lg:w-[75%] rounded-xl space-y-6 bg-[#161b26]">
-    <!-- TEMP DEBUG BANNER — remove after production diagnosis -->
-    <div class="text-xs bg-yellow-900 text-yellow-200 px-4 py-2 rounded break-all">
-      🔍 {{ debugInfo }}
-    </div>
     <HeadingBar
       v-if="selectedTest"
       :title="selectedTest.title"
