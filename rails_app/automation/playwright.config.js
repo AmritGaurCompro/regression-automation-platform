@@ -6,24 +6,19 @@ const retries = Number(process.env.PW_RETRIES);
 
 module.exports = defineConfig({
   testDir: './tests',
-
-  // 🔥 Disable parallel execution in container
   fullyParallel: false,
   
-  // 🔥 Force single worker ALWAYS in deployment
   workers: 1,
 
   forbidOnly: !!process.env.CI,
   retries: Number.isNaN(retries) ? 2 : retries,
-  timeout: 120000,
-  globalTimeout: 300000,  
+  
 
   outputDir: `artifacts/run-${runId}`,
 
   use: {
     headless: true,
 
-    // 🔥 REQUIRED FOR RENDER
     launchOptions: {
       args: [
         '--no-sandbox',
