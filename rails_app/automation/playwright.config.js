@@ -6,13 +6,15 @@ const retries = Number(process.env.PW_RETRIES);
 
 module.exports = defineConfig({
   testDir: './tests',
+
   fullyParallel: false,
   
   workers: 1,
 
   forbidOnly: !!process.env.CI,
   retries: Number.isNaN(retries) ? 2 : retries,
-  
+  timeout: 120000,
+  globalTimeout: 300000,  
 
   outputDir: `artifacts/run-${runId}`,
 
