@@ -30,7 +30,7 @@ class RunPlaywrightJob < ApplicationJob
         "Content-Type" => "application/json"
       },
       body: {
-        ref: "QA",
+        ref: "QA2.0",
         inputs: {
           test_file: spec_name,
           environment: test_run.environment.to_s,
