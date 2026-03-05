@@ -67,6 +67,7 @@ jobs:
         working-directory: rails_app/automation
         env:
           RAILS_API_URL: ${{ secrets.RENDER_URL }}
+          TEST_ID: ${{ github.event.inputs.test_id }}
           TEST_RUN_ID: ${{ github.event.inputs.test_run_id }}
           ENVIRONMENT: ${{ github.event.inputs.environment }}
           CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
