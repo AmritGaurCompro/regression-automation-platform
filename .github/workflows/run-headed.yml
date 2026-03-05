@@ -17,6 +17,8 @@ on:
       test_run_id:
         description: 'Test run ID from Rails'
         required: false
+      test_if:
+        required: false
 
 jobs:
   run-headed:
