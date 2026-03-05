@@ -1,89 +1,89 @@
-class RunPlaywrightJob < ApplicationJob
-  queue_as :default
+const fs = require('fs');
+const path = require('path');
+const cloudinary = require('cloudinary').v2;
 
-  def perform(test_run_id)
-    test_run = TestRun.find(test_run_id)
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-    if test_run.runner_mode == 'headed'
-      trigger_github_actions(test_run)
-    else
-      run_locally(test_run)
-    end
+async function uploadArtifacts() {
+  const artifactsDir = path.join(__dirname, 'artifacts');
+  const railsApiUrl = process.env.RAILS_API_URL;
+  const testRunId = process.env.TEST_RUN_ID;
+  const testId = process.env.TEST_ID;
 
-  rescue => e
-    test_run.update!(status: "failed", finished_at: Time.current) if test_run
-    Rails.logger.error("Playwright job failed: #{e.message}")
-    Rails.logger.error(e.backtrace.join("\n"))
-  end
+  if (!fs.existsSync(artifactsDir)) {
+    console.log('No artifacts directory found');
+    return;
+  }
 
-  private
+  const runs = fs.readdirSync(artifactsDir).filter(d => d.startsWith('run-'));
+  if (!runs.length) {
+    console.log('No run folders found');
+    return;
+  }
 
-  def trigger_github_actions(test_run)
-    test = test_run.test
-    spec_name = "#{test.title}.spec.js"
+  const latestRun = runs[runs.length - 1];
+  const runDir = path.join(artifactsDir, latestRun);
+  const resultJsonPath = path.join(runDir, 'result.json');
 
-    response = HTTParty.post(
-      "https://api.github.com/repos/AmritGaurCompro/regression-automation-platform/actions/workflows/run-headed.yml/dispatches",
-      headers: {
-        "Authorization" => "Bearer #{ENV['GITHUB_TOKEN']}",
-        "Accept" => "application/vnd.github.v3+json",
-        "Content-Type" => "application/json"
-      },
-      body: {
-        ref: "QA",
-        inputs: {
-          test_file: spec_name,
-          environment: test_run.environment.to_s,
-          retries: test_run.retries_on_failure.to_s,
-          test_run_id: test_run.id.to_s
-        }
-      }.to_json
-    )
+  if (!fs.existsSync(resultJsonPath)) {
+    console.log('No result.json found');
+    return;
+  }
 
-    if response.code == 204
-      Rails.logger.info("GitHub Actions triggered for test_run #{test_run.id}")
-      # Status will be updated when GitHub Actions calls back
-      test_run.update!(status: "running")
-    else
-      Rails.logger.error("GitHub Actions trigger failed: #{response.body}")
-      test_run.update!(status: "failed", finished_at: Time.current)
-    end
-  end
+  const resultData = JSON.parse(fs.readFileSync(resultJsonPath, 'utf8'));
+  const results = resultData?.suites?.[0]?.specs?.[0]?.tests?.[0]?.results || [];
+  const failedResult = results.find(r => r.errors?.length);
 
-  def run_locally(test_run)
-    test = test_run.test
-    node_path = `which node`.strip
-    script_path = Rails.root.join('automation/run.js')
-    spec_name = "#{test.title}.spec.js"
+  const uploadedArtifacts = [];
 
-    env_vars = {
-      'PW_RETRIES' => test_run.retries_on_failure.to_s,
-      'PW_HEADED' => 'false',
-      'TEST_RUN_ID' => test_run.id.to_s,
-      'ENVIRONMENT' => test_run.environment.to_s
+  if (failedResult) {
+    for (const att of (failedResult.attachments || [])) {
+      if (att.name === 'error-context' || !att.path) continue;
+      if (!fs.existsSync(att.path)) continue;
+
+      try {
+        const result = await cloudinary.uploader.upload(att.path, {
+          resource_type: 'auto',
+          folder: process.env.ENVIRONMENT || 'QA'
+        });
+        uploadedArtifacts.push({
+          kind: att.name,
+          file_url: result.secure_url
+        });
+        console.log(`Uploaded ${att.name}: ${result.secure_url}`);
+      } catch (err) {
+        console.error(`Failed to upload ${att.name}:`, err.message);
+      }
     }
+  }
 
-    env_string = env_vars.map { |k, v| "#{k}=#{v}" }.join(' ')
-    command = "#{env_string} #{node_path} #{script_path} #{spec_name} 2>&1"
+  // Send to Rails API
+  if (testRunId && testId && railsApiUrl) {
+    try {
+      const response = await fetch(
+        `${railsApiUrl}/api/tests/${testId}/test_runs/${testRunId}/artifacts`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            artifacts: uploadedArtifacts,
+            errors: failedResult?.errors || [],
+            success: !failedResult,
+            result: resultData
+          })
+        }
+      );
+      console.log('Rails API response:', response.status);
+    } catch (err) {
+      console.error('Failed to notify Rails API:', err.message);
+    }
+  } else {
+    console.log('Missing TEST_RUN_ID, TEST_ID or RAILS_API_URL - skipping Rails notification');
+  }
+}
 
-    Rails.logger.info("Running Playwright locally: #{command}")
-
-    output = ""
-    IO.popen(command) { |io| io.each { |line| output << line } }
-
-    if output =~ /---RESULT---(.*?)---END---/m
-      result = JSON.parse($1)
-      test_run.update!(
-        status: result["success"] ? "passed" : "failed",
-        finished_at: Time.current
-      )
-    else
-      test_run.update!(
-        status: "failed",
-        finished_at: Time.current
-      )
-    end
-
-    UploadArtifactsJob.perform_later(test_run.id)
-  end
-end
+uploadArtifacts().catch(console.error);
