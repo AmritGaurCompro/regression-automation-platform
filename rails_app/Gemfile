@@ -41,6 +41,8 @@ end
 
 group :development, :test do
   gem 'dotenv-rails'
+
+gem 'httparty'
 end
 
 
