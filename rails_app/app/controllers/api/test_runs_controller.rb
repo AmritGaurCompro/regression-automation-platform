@@ -65,4 +65,36 @@ end
     end
   end
 
+    def receive_artifacts
+  test_run = TestRun.find(params[:test_run_id])
+
+  # Save error log
+  if params[:errors].present?
+    Artifact.create!(
+      test_run: test_run,
+      kind: 'error_log',
+      file_url: nil,
+      metadata: params[:errors]
+    )
+  end
+
+  # Save cloudinary URLs
+  (params[:artifacts] || []).each do |att|
+    Artifact.create!(
+      test_run: test_run,
+      kind: att[:kind],
+      file_url: att[:file_url]
+    )
+  end
+
+  test_run.update!(
+    status: params[:success] ? 'passed' : 'failed',
+    finished_at: Time.current
+  )
+
+  render json: { success: true }
+rescue => e
+  render json: { error: e.message }, status: 422
+end
+
 end
