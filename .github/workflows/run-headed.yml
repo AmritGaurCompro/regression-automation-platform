@@ -58,6 +58,13 @@ jobs:
           sleep 2
           echo "Xvfb started on display :99"
 
+      - name: Debug inputs
+        run: |
+          echo "test_file: ${{ github.event.inputs.test_file }}"
+          echo "test_run_id: ${{ github.event.inputs.test_run_id }}"
+          echo "test_id: ${{ github.event.inputs.test_id }}"
+          echo "environment: ${{ github.event.inputs.environment }}"
+
       - name: Run Playwright tests (headed via Xvfb)
         working-directory: rails_app/automation
         env:
