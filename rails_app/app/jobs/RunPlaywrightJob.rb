@@ -25,15 +25,15 @@ class RunPlaywrightJob < ApplicationJob
     puts "spec_name: #{spec_name}"
     puts "test_run_id: #{test_run.id}"
     puts "test_id: #{test.id}"
-    puts "GITHUB_TOKEN present: #{ENV['GITHUB_TOKEN'].present?}"
-    puts "GITHUB_TOKEN starts with: #{ENV['GITHUB_TOKEN']&.first(10)}"
+    puts "GITHUB_PAT present: #{ENV['GITHUB_PAT'].present?}"
+    puts "GITHUB_PAT starts with: #{ENV['GITHUB_PAT']&.first(10)}"
     $stdout.flush
 
     begin
       response = HTTParty.post(
         "https://api.github.com/repos/AmritGaurCompro/regression-automation-platform/actions/workflows/run-headed.yml/dispatches",
         headers: {
-          "Authorization" => "Bearer #{ENV['GITHUB_TOKEN']}",
+          "Authorization" => "Bearer #{ENV['GITHUB_PAT']}",
           "Accept" => "application/vnd.github.v3+json",
           "Content-Type" => "application/json"
         },
