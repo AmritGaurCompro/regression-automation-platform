@@ -22,36 +22,46 @@ class RunPlaywrightJob < ApplicationJob
 
     Rails.logger.info("Triggering GitHub Actions with spec: #{spec_name}")
     Rails.logger.info("test_run_id: #{test_run.id}, test_id: #{test.id}")
-
-    response = HTTParty.post(
-      "https://api.github.com/repos/AmritGaurCompro/regression-automation-platform/actions/workflows/run-headed.yml/dispatches",
-      headers: {
-        "Authorization" => "Bearer #{ENV['GITHUB_TOKEN']}",
-        "Accept" => "application/vnd.github.v3+json",
-        "Content-Type" => "application/json"
-      },
-      body: {
-        ref: "QA2.0",
-        inputs: {
-          test_file: spec_name,
-          environment: test_run.environment.to_s,
-          retries: test_run.retries_on_failure.to_s,
-          test_run_id: test_run.id.to_s,
-          test_id: test.id.to_s
-        }
-      }.to_json,
-      timeout:10
-    )
-
-    Rails.logger.info("GitHub Actions response code: #{response.code}")
-    Rails.logger.info("GitHub Actions response body: #{response.body}")
+    Rails.logger.info("GITHUB_TOKEN present: #{ENV['GITHUB_TOKEN'].present?}")
+    Rails.logger.info("GITHUB_TOKEN starts with: #{ENV['GITHUB_TOKEN']&.first(10)}...")
     $stdout.flush
 
-    if response.code == 204
-      Rails.logger.info("GitHub Actions triggered successfully for test_run #{test_run.id}")
-      test_run.update!(status: "running")
-    else
-      Rails.logger.error("GitHub Actions trigger failed: #{response.body}")
+    begin
+      response = HTTParty.post(
+        "https://api.github.com/repos/AmritGaurCompro/regression-automation-platform/actions/workflows/run-headed.yml/dispatches",
+        headers: {
+          "Authorization" => "Bearer #{ENV['GITHUB_TOKEN']}",
+          "Accept" => "application/vnd.github.v3+json",
+          "Content-Type" => "application/json"
+        },
+        body: {
+          ref: "QA2.0",
+          inputs: {
+            test_file: spec_name,
+            environment: test_run.environment.to_s,
+            retries: test_run.retries_on_failure.to_s,
+            test_run_id: test_run.id.to_s,
+            test_id: test.id.to_s
+          }
+        }.to_json,
+        timeout: 10
+      )
+
+      Rails.logger.info("GitHub Actions response code: #{response.code}")
+      Rails.logger.info("GitHub Actions response body: #{response.body}")
+      $stdout.flush
+
+      if response.code == 204
+        Rails.logger.info("GitHub Actions triggered successfully for test_run #{test_run.id}")
+        test_run.update!(status: "running")
+      else
+        Rails.logger.error("GitHub Actions trigger failed: #{response.body}")
+        test_run.update!(status: "failed", finished_at: Time.current)
+      end
+    rescue => e
+      Rails.logger.error("HTTParty request failed: #{e.message}")
+      Rails.logger.error(e.backtrace.join("\n"))
+      $stdout.flush
       test_run.update!(status: "failed", finished_at: Time.current)
     end
   end
