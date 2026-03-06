@@ -17,8 +17,16 @@ on:
       test_run_id:
         description: 'Test run ID from Rails'
         required: false
-      test_if:
+      test_id:
+        description: 'Test ID from Rails'
         required: false
+
+  push:
+    branches:
+      - QA2.0
+    paths:
+      - 'rails_app/**'
+      - '.github/workflows/run-headed.yml'
 
 jobs:
   run-headed:
@@ -58,6 +66,7 @@ jobs:
           PW_RETRIES: ${{ github.event.inputs.retries }}
           ENVIRONMENT: ${{ github.event.inputs.environment }}
           TEST_RUN_ID: ${{ github.event.inputs.test_run_id }}
+          TEST_ID: ${{ github.event.inputs.test_id }}
           BASE_URL: ${{ secrets.VERCEL_URL }}
           RAILS_API_URL: ${{ secrets.RENDER_URL }}
         run: node run.js ${{ github.event.inputs.test_file }}
