@@ -3,13 +3,11 @@ class RunPlaywrightJob < ApplicationJob
 
   def perform(test_run_id)
     test_run = TestRun.find(test_run_id)
-
     if test_run.runner_mode == 'headed'
       trigger_github_actions(test_run)
     else
       run_locally(test_run)
     end
-
   rescue => e
     test_run.update!(status: "failed", finished_at: Time.current) if test_run
     Rails.logger.error("Playwright job failed: #{e.message}")
@@ -21,6 +19,9 @@ class RunPlaywrightJob < ApplicationJob
   def trigger_github_actions(test_run)
     test = test_run.test
     spec_name = "#{test.title}.spec.js"
+
+    Rails.logger.info("Triggering GitHub Actions with spec: #{spec_name}")
+    Rails.logger.info("test_run_id: #{test_run.id}, test_id: #{test.id}")
 
     response = HTTParty.post(
       "https://api.github.com/repos/AmritGaurCompro/regression-automation-platform/actions/workflows/run-headed.yml/dispatches",
@@ -41,8 +42,11 @@ class RunPlaywrightJob < ApplicationJob
       }.to_json
     )
 
+    Rails.logger.info("GitHub Actions response code: #{response.code}")
+    Rails.logger.info("GitHub Actions response body: #{response.body}")
+
     if response.code == 204
-      Rails.logger.info("GitHub Actions triggered for test_run #{test_run.id}")
+      Rails.logger.info("GitHub Actions triggered successfully for test_run #{test_run.id}")
       test_run.update!(status: "running")
     else
       Rails.logger.error("GitHub Actions trigger failed: #{response.body}")
@@ -56,6 +60,8 @@ class RunPlaywrightJob < ApplicationJob
     script_path = Rails.root.join('automation/run.js')
     spec_name = "#{test.title}.spec.js"
 
+    Rails.logger.info("Running Playwright locally with spec: #{spec_name}")
+
     env_vars = {
       'PW_RETRIES' => test_run.retries_on_failure.to_s,
       'PW_HEADED' => 'false',
@@ -66,7 +72,7 @@ class RunPlaywrightJob < ApplicationJob
     env_string = env_vars.map { |k, v| "#{k}=#{v}" }.join(' ')
     command = "#{env_string} #{node_path} #{script_path} #{spec_name} 2>&1"
 
-    Rails.logger.info("Running Playwright locally: #{command}")
+    Rails.logger.info("Running Playwright: #{command}")
 
     output = ""
     IO.popen(command) { |io| io.each { |line| output << line } }
