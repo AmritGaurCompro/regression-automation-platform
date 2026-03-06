@@ -39,7 +39,8 @@ class RunPlaywrightJob < ApplicationJob
           test_run_id: test_run.id.to_s,
           test_id: test.id.to_s
         }
-      }.to_json
+      }.to_json,
+      timeout:10
     )
 
     Rails.logger.info("GitHub Actions response code: #{response.code}")
