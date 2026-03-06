@@ -10,8 +10,9 @@ class RunPlaywrightJob < ApplicationJob
     end
   rescue => e
     test_run.update!(status: "failed", finished_at: Time.current) if test_run
-    Rails.logger.error("Playwright job failed: #{e.message}")
-    Rails.logger.error(e.backtrace.join("\n"))
+    puts "Playwright job failed: #{e.message}"
+    puts e.backtrace.join("\n")
+    $stdout.flush
   end
 
   private
@@ -20,10 +21,12 @@ class RunPlaywrightJob < ApplicationJob
     test = test_run.test
     spec_name = "#{test.title}.spec.js"
 
-    Rails.logger.info("Triggering GitHub Actions with spec: #{spec_name}")
-    Rails.logger.info("test_run_id: #{test_run.id}, test_id: #{test.id}")
-    Rails.logger.info("GITHUB_TOKEN present: #{ENV['GITHUB_TOKEN'].present?}")
-    Rails.logger.info("GITHUB_TOKEN starts with: #{ENV['GITHUB_TOKEN']&.first(10)}...")
+    puts "=== TRIGGER GITHUB ACTIONS ==="
+    puts "spec_name: #{spec_name}"
+    puts "test_run_id: #{test_run.id}"
+    puts "test_id: #{test.id}"
+    puts "GITHUB_TOKEN present: #{ENV['GITHUB_TOKEN'].present?}"
+    puts "GITHUB_TOKEN starts with: #{ENV['GITHUB_TOKEN']&.first(10)}"
     $stdout.flush
 
     begin
@@ -47,20 +50,24 @@ class RunPlaywrightJob < ApplicationJob
         timeout: 10
       )
 
-      Rails.logger.info("GitHub Actions response code: #{response.code}")
-      Rails.logger.info("GitHub Actions response body: #{response.body}")
+      puts "=== GITHUB ACTIONS RESPONSE ==="
+      puts "response code: #{response.code}"
+      puts "response body: #{response.body}"
       $stdout.flush
 
       if response.code == 204
-        Rails.logger.info("GitHub Actions triggered successfully for test_run #{test_run.id}")
+        puts "GitHub Actions triggered successfully for test_run #{test_run.id}"
+        $stdout.flush
         test_run.update!(status: "running")
       else
-        Rails.logger.error("GitHub Actions trigger failed: #{response.body}")
+        puts "GitHub Actions trigger failed: #{response.body}"
+        $stdout.flush
         test_run.update!(status: "failed", finished_at: Time.current)
       end
     rescue => e
-      Rails.logger.error("HTTParty request failed: #{e.message}")
-      Rails.logger.error(e.backtrace.join("\n"))
+      puts "=== HTTPARTY ERROR ==="
+      puts e.message
+      puts e.backtrace.join("\n")
       $stdout.flush
       test_run.update!(status: "failed", finished_at: Time.current)
     end
@@ -72,7 +79,9 @@ class RunPlaywrightJob < ApplicationJob
     script_path = Rails.root.join('automation/run.js')
     spec_name = "#{test.title}.spec.js"
 
-    Rails.logger.info("Running Playwright locally with spec: #{spec_name}")
+    puts "=== RUN LOCALLY ==="
+    puts "Running Playwright locally with spec: #{spec_name}"
+    $stdout.flush
 
     env_vars = {
       'PW_RETRIES' => test_run.retries_on_failure.to_s,
@@ -84,7 +93,8 @@ class RunPlaywrightJob < ApplicationJob
     env_string = env_vars.map { |k, v| "#{k}=#{v}" }.join(' ')
     command = "#{env_string} #{node_path} #{script_path} #{spec_name} 2>&1"
 
-    Rails.logger.info("Running Playwright: #{command}")
+    puts "Running command: #{command}"
+    $stdout.flush
 
     output = ""
     IO.popen(command) { |io| io.each { |line| output << line } }
