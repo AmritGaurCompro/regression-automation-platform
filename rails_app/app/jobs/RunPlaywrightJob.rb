@@ -45,6 +45,7 @@ class RunPlaywrightJob < ApplicationJob
 
     Rails.logger.info("GitHub Actions response code: #{response.code}")
     Rails.logger.info("GitHub Actions response body: #{response.body}")
+    $stdout.flush
 
     if response.code == 204
       Rails.logger.info("GitHub Actions triggered successfully for test_run #{test_run.id}")
