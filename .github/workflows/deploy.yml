@@ -3,7 +3,7 @@ name: Deploy to Render
 on:
   push:
     branches:
-      - QA2.0
+      - QA
     paths:
       - 'rails_app/**'
       - '.github/workflows/deploy.yml'
