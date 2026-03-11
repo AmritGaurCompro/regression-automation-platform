@@ -12,9 +12,14 @@ function runTests(testFile) {
   const testRunId = process.env.TEST_RUN_ID || runId;
   const environment = process.env.ENVIRONMENT || 'QA';
   
+
+  const hasDisplay = !!process.env.DISPLAY;
+  const isRender = !!process.env.RENDER;
+  const canRunHeaded = headed && hasDisplay && !isRender;
+  
   // Build command with retries and headed/headless mode
   let command = `npx playwright test ${testFile}`;
-  if (headed) {
+  if (canRunHeaded) {
     command += ' --headed';
   }
   
@@ -22,7 +27,10 @@ function runTests(testFile) {
   console.log('Test Execution Configuration:');
   console.log(`  Test File: ${testFile}`);
   console.log(`  Environment: ${environment}`);
-  console.log(`  Runner Mode: ${headed ? 'headed' : 'headless'}`);
+  console.log(`  Runner Mode: ${canRunHeaded ? 'headed' : 'headless'}`);
+  if (headed && !canRunHeaded) {
+    console.log(`  ⚠️  Headed mode requested but not available - running headless`);
+  }
   console.log(`  Retries: ${retries}`);
   console.log(`  Test Run ID: ${testRunId}`);
   console.log(`  Command: ${command}`);
@@ -68,7 +76,7 @@ function runTests(testFile) {
         outputDir: outputDir,
         timestamp: new Date().toISOString(),
         environment: environment,
-        runnerMode: headed ? 'headed' : 'headless',
+        runnerMode: canRunHeaded ? 'headed' : 'headless',
         retries: parseInt(retries)
       };
 
@@ -95,7 +103,7 @@ function runTests(testFile) {
       console.log(`  Exit Code: ${exitCode}`);
       console.log(`  Status: ${exitCode === 0 ? 'PASSED ✓' : 'FAILED ✗'}`);
       console.log(`  Environment: ${environment}`);
-      console.log(`  Runner Mode: ${headed ? 'headed' : 'headless'}`);
+      console.log(`  Runner Mode: ${canRunHeaded ? 'headed' : 'headless'}`);
       console.log(`  Retries Used: ${retries}`);
       if (result.stats) {
         console.log(`  Tests: ${result.stats.passed} passed, ${result.stats.failed} failed, ${result.stats.total} total`);
@@ -119,7 +127,7 @@ function runTests(testFile) {
         error: error.message,
         timestamp: new Date().toISOString(),
         environment: environment,
-        runnerMode: headed ? 'headed' : 'headless',
+        runnerMode: canRunHeaded ? 'headed' : 'headless',
         retries: parseInt(retries)
       };
       
