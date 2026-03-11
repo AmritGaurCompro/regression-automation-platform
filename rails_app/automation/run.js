@@ -12,9 +12,10 @@ function runTests(testFile) {
   const testRunId = process.env.TEST_RUN_ID || runId;
   const environment = process.env.ENVIRONMENT || 'QA';
   
-  // Check if display is available (works with Xvfb)
+
   const hasDisplay = !!process.env.DISPLAY;
-  const canRunHeaded = headed && hasDisplay;
+  const isRender = !!process.env.RENDER;
+  const canRunHeaded = headed && hasDisplay && !isRender;
   
   // Build command with retries and headed/headless mode
   let command = `npx playwright test ${testFile}`;
@@ -28,7 +29,7 @@ function runTests(testFile) {
   console.log(`  Environment: ${environment}`);
   console.log(`  Runner Mode: ${canRunHeaded ? 'headed' : 'headless'}`);
   if (headed && !canRunHeaded) {
-    console.log(`  ⚠️  Headed mode requested but DISPLAY not available - running headless`);
+    console.log(`  ⚠️  Headed mode requested but not available - running headless`);
   }
   console.log(`  Retries: ${retries}`);
   console.log(`  Test Run ID: ${testRunId}`);
