@@ -33,7 +33,13 @@ async function uploadArtifacts() {
     return;
   }
 
+  console.log('=== ARTIFACTS DIR CONTENTS ===');
+  console.log('artifactsDir:', artifactsDir);
+  fs.readdirSync(artifactsDir).forEach(f => console.log(' -', f));
+
   const runs = fs.readdirSync(artifactsDir).filter(d => d.startsWith('run-'));
+  console.log('runs found:', runs);
+
   if (!runs.length) {
     console.log('No run folders found - sending basic result');
     await notifyRails(url, [], [], true);
@@ -42,6 +48,12 @@ async function uploadArtifacts() {
 
   const latestRun = runs[runs.length - 1];
   const runDir = path.join(artifactsDir, latestRun);
+  console.log('runDir:', runDir);
+  console.log('runDir contents:');
+  if (fs.existsSync(runDir)) {
+    fs.readdirSync(runDir).forEach(f => console.log(' -', f));
+  }
+
   const resultJsonPath = path.join(runDir, 'result.json');
 
   if (!fs.existsSync(resultJsonPath)) {
