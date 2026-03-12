@@ -14,14 +14,29 @@ async function uploadArtifacts() {
   const testRunId = process.env.TEST_RUN_ID;
   const testId = process.env.TEST_ID;
 
+  console.log('=== UPLOAD ARTIFACTS ===');
+  console.log('railsApiUrl:', railsApiUrl);
+  console.log('testRunId:', testRunId);
+  console.log('testId:', testId);
+
+  if (!testRunId || !testId || !railsApiUrl) {
+    console.log('Missing required env vars - skipping Rails notification');
+    return;
+  }
+
+  const url = `${railsApiUrl}/api/tests/${testId}/test_runs/${testRunId}/artifacts`;
+  console.log('Sending to URL:', url);
+
   if (!fs.existsSync(artifactsDir)) {
-    console.log('No artifacts directory found');
+    console.log('No artifacts directory found - sending basic result');
+    await notifyRails(url, [], [], true);
     return;
   }
 
   const runs = fs.readdirSync(artifactsDir).filter(d => d.startsWith('run-'));
   if (!runs.length) {
-    console.log('No run folders found');
+    console.log('No run folders found - sending basic result');
+    await notifyRails(url, [], [], true);
     return;
   }
 
@@ -30,13 +45,17 @@ async function uploadArtifacts() {
   const resultJsonPath = path.join(runDir, 'result.json');
 
   if (!fs.existsSync(resultJsonPath)) {
-    console.log('No result.json found');
+    console.log('No result.json found - sending basic result');
+    await notifyRails(url, [], [], true);
     return;
   }
 
   const resultData = JSON.parse(fs.readFileSync(resultJsonPath, 'utf8'));
   const results = resultData?.suites?.[0]?.specs?.[0]?.tests?.[0]?.results || [];
   const failedResult = results.find(r => r.errors?.length);
+  const success = !failedResult;
+
+  console.log('Test success:', success);
 
   const uploadedArtifacts = [];
 
@@ -61,28 +80,25 @@ async function uploadArtifacts() {
     }
   }
 
-  // Send to Rails API
-  if (testRunId && testId && railsApiUrl) {
-    try {
-      const response = await fetch(
-        `${railsApiUrl}/api/tests/${testId}/test_runs/${testRunId}/artifacts`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            artifacts: uploadedArtifacts,
-            errors: failedResult?.errors || [],
-            success: !failedResult,
-            result: resultData
-          })
-        }
-      );
-      console.log('Rails API response:', response.status);
-    } catch (err) {
-      console.error('Failed to notify Rails API:', err.message);
-    }
-  } else {
-    console.log('Missing TEST_RUN_ID, TEST_ID or RAILS_API_URL - skipping Rails notification');
+  await notifyRails(url, uploadedArtifacts, failedResult?.errors || [], success);
+}
+
+async function notifyRails(url, artifacts, errors, success) {
+  try {
+    const body = JSON.stringify({ artifacts, errors, success });
+    console.log('Request body:', body);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body
+    });
+
+    const responseText = await response.text();
+    console.log('Rails API response status:', response.status);
+    console.log('Rails API response body:', responseText);
+  } catch (err) {
+    console.error('Failed to notify Rails API:', err.message);
   }
 }
 
