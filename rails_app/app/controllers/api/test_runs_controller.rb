@@ -66,7 +66,7 @@ end
   end
 
     def receive_artifacts
-  test_run = TestRun.find(params[:test_run_id])
+  test_run = TestRun.find(params[:id])
 
   # Save error log
   if params[:errors].present?
