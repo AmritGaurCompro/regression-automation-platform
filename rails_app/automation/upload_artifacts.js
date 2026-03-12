@@ -54,10 +54,25 @@ async function uploadArtifacts() {
     fs.readdirSync(runDir).forEach(f => console.log(' -', f));
   }
 
-  const resultJsonPath = path.join(runDir, 'result.json');
+  // Search for result.json in runDir or subfolders
+  let resultJsonPath = path.join(runDir, 'result.json');
 
   if (!fs.existsSync(resultJsonPath)) {
-    console.log('No result.json found - sending basic result');
+    console.log('result.json not in root, searching subfolders...');
+    const subFolders = fs.readdirSync(runDir);
+    for (const subFolder of subFolders) {
+      const subPath = path.join(runDir, subFolder, 'result.json');
+      console.log('Checking:', subPath);
+      if (fs.existsSync(subPath)) {
+        resultJsonPath = subPath;
+        console.log('Found result.json at:', resultJsonPath);
+        break;
+      }
+    }
+  }
+
+  if (!fs.existsSync(resultJsonPath)) {
+    console.log('No result.json found anywhere - sending basic result');
     await notifyRails(url, [], [], true);
     return;
   }
