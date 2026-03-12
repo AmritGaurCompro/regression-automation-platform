@@ -61,6 +61,11 @@ async function uploadArtifacts() {
     console.log('result.json not in root, searching subfolders...');
     const subFolders = fs.readdirSync(runDir);
     for (const subFolder of subFolders) {
+      const subFolderPath = path.join(runDir, subFolder);
+      console.log('Subfolder contents of', subFolder, ':');
+      if (fs.statSync(subFolderPath).isDirectory()) {
+        fs.readdirSync(subFolderPath).forEach(f => console.log('   -', f));
+      }
       const subPath = path.join(runDir, subFolder, 'result.json');
       console.log('Checking:', subPath);
       if (fs.existsSync(subPath)) {
