@@ -83,12 +83,14 @@ async function uploadArtifacts() {
   }
 
   const resultData = JSON.parse(fs.readFileSync(resultJsonPath, 'utf8'));
-
-  const success = resultData?.success === true;
+  
+  // Use stats from Playwright JSON report
+  const stats = resultData?.stats;
+  const success = stats?.unexpected === 0 && stats?.failed === 0;
 
   console.log('=== RESULT DATA ===');
+  console.log('stats:', JSON.stringify(stats));
   console.log('success:', success);
-  console.log('resultData keys:', Object.keys(resultData));
 
   const results = resultData?.suites?.[0]?.specs?.[0]?.tests?.[0]?.results || [];
   const failedResult = results.find(r => r.errors?.length);
