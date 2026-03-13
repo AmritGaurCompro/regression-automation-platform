@@ -84,13 +84,11 @@ async function uploadArtifacts() {
 
   const resultData = JSON.parse(fs.readFileSync(resultJsonPath, 'utf8'));
 
-  // Use exitCode from run.js result as source of truth
-  const exitCode = resultData?.exitCode;
-  const success = exitCode === 0;
+  const success = resultData?.success === true;
 
   console.log('=== RESULT DATA ===');
-  console.log('exitCode:', exitCode);
   console.log('success:', success);
+  console.log('resultData keys:', Object.keys(resultData));
 
   const results = resultData?.suites?.[0]?.specs?.[0]?.tests?.[0]?.results || [];
   const failedResult = results.find(r => r.errors?.length);
