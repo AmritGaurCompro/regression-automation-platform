@@ -50,8 +50,8 @@ jobs:
         working-directory: rails_app/automation
         run: npx playwright install --with-deps chromium
 
-      - name: Install Xvfb + x11vnc
-        run: sudo apt-get install -y xvfb x11vnc
+      - name: Install Xvfb + x11vnc + noVNC
+        run: sudo apt-get install -y xvfb x11vnc novnc websockify
 
       - name: Start Xvfb (virtual display)
         run: |
@@ -62,16 +62,24 @@ jobs:
       - name: Start VNC server
         run: x11vnc -display :99 -forever -nopw -bg -quiet -shared
 
-      - name: Install + start Cloudflare tunnel
+      - name: Start noVNC (browser-based VNC)
+        run: |
+          websockify --web /usr/share/novnc 6080 localhost:5900 &
+          sleep 3
+          echo "noVNC started on port 6080"
+
+      - name: Start Cloudflare tunnel
         run: |
           wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
           sudo dpkg -i cloudflared-linux-amd64.deb
-          cloudflared tunnel --url tcp://localhost:5900 > /tmp/cloudflared.log 2>&1 &
+          cloudflared tunnel --url http://localhost:6080 > /tmp/cloudflared.log 2>&1 &
           sleep 10
+          URL=$(cat /tmp/cloudflared.log | grep -o 'https://[a-zA-Z0-9.-]*\.trycloudflare\.com' | head -1)
           echo "======================================================"
-          cat /tmp/cloudflared.log | grep -o 'https://[a-zA-Z0-9.-]*\.trycloudflare\.com' | head -1 | xargs -I{} echo "VNC URL: {}"
+          echo "Open this URL in your browser to watch live:"
+          echo "$URL/vnc.html"
           echo "======================================================"
-          echo "Open RealVNC Viewer and connect to the URL above"
+          echo "No password needed - just click Connect"
           echo "Waiting 30 seconds for you to connect..."
           echo "======================================================"
           sleep 30
@@ -117,3 +125,8 @@ jobs:
           name: playwright-artifacts-headed
           path: rails_app/automation/artifacts/
           retention-days: 7
+```
+
+Push to `QA2.0`, trigger a headed run, watch logs for the URL like:
+```
+https://xxxx.trycloudflare.com/vnc.html
