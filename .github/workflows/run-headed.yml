@@ -62,32 +62,18 @@ jobs:
       - name: Start VNC server
         run: x11vnc -display :99 -forever -nopw -bg -quiet -shared
 
-      - name: Install + start ngrok
-        env:
-          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+      - name: Install + start Cloudflare tunnel
         run: |
-          curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
-            | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
-            && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" \
-            | sudo tee /etc/apt/sources.list.d/ngrok.list \
-            && sudo apt-get update \
-            && sudo apt-get install ngrok
-          ngrok config add-authtoken $NGROK_AUTHTOKEN
-          ngrok tcp 5900 --log=stdout &
-          sleep 8
-          curl -s http://localhost:4040/api/tunnels | python3 -c "
-          import sys, json
-          tunnels = json.load(sys.stdin)['tunnels']
-          if tunnels:
-              url = tunnels[0]['public_url'].replace('tcp://', '')
-              print('====================================================')
-              print('VNC URL (open in RealVNC Viewer):')
-              print(f'   {url}')
-              print('====================================================')
-              print('Waiting 30 seconds for you to connect...')
-          else:
-              print('No tunnels found - check NGROK_AUTHTOKEN secret')
-          "
+          wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared-linux-amd64.deb
+          cloudflared tunnel --url tcp://localhost:5900 > /tmp/cloudflared.log 2>&1 &
+          sleep 10
+          echo "======================================================"
+          cat /tmp/cloudflared.log | grep -o 'https://[a-zA-Z0-9.-]*\.trycloudflare\.com' | head -1 | xargs -I{} echo "VNC URL: {}"
+          echo "======================================================"
+          echo "Open RealVNC Viewer and connect to the URL above"
+          echo "Waiting 30 seconds for you to connect..."
+          echo "======================================================"
           sleep 30
           echo "Starting test now..."
 
