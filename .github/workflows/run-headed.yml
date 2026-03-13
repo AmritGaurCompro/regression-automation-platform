@@ -125,8 +125,5 @@ jobs:
           name: playwright-artifacts-headed
           path: rails_app/automation/artifacts/
           retention-days: 7
-```
 
-Push to `QA2.0`, trigger a headed run, watch logs for the URL like:
-```
-https://xxxx.trycloudflare.com/vnc.html
+
