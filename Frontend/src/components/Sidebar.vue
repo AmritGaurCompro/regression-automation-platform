@@ -19,16 +19,14 @@ import { storeToRefs } from 'pinia'
 import { useTestFilter } from '@/composables/useTestFilter'
 import { useTestStats } from '@/composables/useTestStats'
 import { useTestOperations } from '@/composables/useTestOperations'
+import ScrollArea from './ui/scroll-area/ScrollArea.vue'
 
 const testStore = useTestStore()
 
-// ✅ reactive store refs
 const { tests, selectedTest, searchQuery } = storeToRefs(testStore)
 
-// ✅ composables
 const { runSelectedTest } = useTestOperations()
 
-// ✅ fetch tests from backend when sidebar loads
 onMounted(async () => {
   await testStore.refreshTestsFromBackend()
 
@@ -37,11 +35,9 @@ onMounted(async () => {
   }
 })
 
-// ✅ filters + stats now use store tests
 const { filteredTests } = useTestFilter(tests, searchQuery)
 const { passCnt, failCnt, runCnt } = useTestStats(tests)
 
-// ✅ run handler
 const handleRunTest = async (test) => {
   testStore.setSelectedTest(test)
   await runSelectedTest()
@@ -63,14 +59,21 @@ const handleRunTest = async (test) => {
         :failCnt="failCnt"
         :runCnt="runCnt"
       />
-      <div v-for="test in filteredTests" :key="test.id">
-        <TestCard
-          :tests="test"
-          @click="testStore.setSelectedTest(test)"
-          :class="selectedTest?.id === test.id ? 'border-[#6366f1] border-l-[#8b5cf6]' : ''"
-          @action="handleRunTest(test)"
-        />
-      </div>
+      
+      <ScrollArea class="h-[28rem] w-full mt-5">
+        <div class="pr-3">
+          <div v-for="test in filteredTests" :key="test.id">
+          <TestCard
+            :tests="test"
+            @click="testStore.setSelectedTest(test)"
+            :class="selectedTest?.id === test.id ? 'border-[#6366f1] border-l-[#8b5cf6]' : ''"
+            @action="handleRunTest(test)"
+          />
+          </div>
+        </div>
+        <ScrollBar orientation="vertical" />
+      </ScrollArea>
+
     </CardContent>
     <CardFooter class="bg-[#161b26]">
       <InformationalTip />
