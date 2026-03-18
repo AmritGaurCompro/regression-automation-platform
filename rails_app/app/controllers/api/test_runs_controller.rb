@@ -18,7 +18,8 @@ def index
       started_at: run.started_at,
       finished_at: run.finished_at,
       created_at: run.created_at,
-      duration: calculate_duration(run)   
+      duration: calculate_duration(run),
+      vnc_url: run.vnc_url
     }
   }
 end
@@ -49,8 +50,6 @@ end
     }, status: :created
   end
   
-  
-  
   def calculate_duration(test_run)
     return nil unless test_run&.created_at && test_run&.updated_at
 
@@ -64,6 +63,14 @@ end
       "#{minutes}m #{seconds}s"
     end
   end
+
+def update_vnc_url
+  test_run = TestRun.find(params[:id])
+  test_run.update!(vnc_url: params[:vnc_url])
+  render json: { success: true }
+rescue => e
+  render json: { error: e.message }, status: 422
+end
 
     def receive_artifacts
   test_run = TestRun.find(params[:id])

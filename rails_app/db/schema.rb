@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_02_10_063947) do
+ActiveRecord::Schema.define(version: 2026_03_18_100229) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -36,7 +36,7 @@ ActiveRecord::Schema.define(version: 2026_02_10_063947) do
 
   create_table "test_runs", force: :cascade do |t|
     t.bigint "test_id", null: false
-    t.string "status", default: "running"
+    t.string "status", default: "not_run"
     t.datetime "started_at"
     t.datetime "finished_at"
     t.datetime "created_at", precision: 6, null: false
@@ -46,6 +46,7 @@ ActiveRecord::Schema.define(version: 2026_02_10_063947) do
     t.string "runner_mode", default: "headless", null: false
     t.integer "retries_on_failure", default: 0, null: false
     t.text "tags"
+    t.string "vnc_url"
     t.index ["script_id"], name: "index_test_runs_on_script_id"
     t.index ["test_id"], name: "index_test_runs_on_test_id"
   end
