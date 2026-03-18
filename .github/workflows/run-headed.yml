@@ -80,7 +80,7 @@ jobs:
           echo "VNC URL: $VNC_URL"
           echo "======================================================"
           echo "Sending VNC URL to Rails API..."
-          curl -s -X POST "${{ secrets.RENDER_URL }}/api/tests/${{ github.event.inputs.test_id }}/test_runs/${{ github.event.inputs.test_run_id }}/vnc_url" \
+          curl -v -X POST "${{ secrets.RENDER_URL }}/api/tests/${{ github.event.inputs.test_id }}/test_runs/${{ github.event.inputs.test_run_id }}/vnc_url" \
             -H "Content-Type: application/json" \
             -d "{\"vnc_url\": \"$VNC_URL\"}"
           echo "VNC URL sent to Rails API"
