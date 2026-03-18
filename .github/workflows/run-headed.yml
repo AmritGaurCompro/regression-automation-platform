@@ -85,7 +85,6 @@ jobs:
             -d "{\"vnc_url\": \"$VNC_URL\"}"
           echo "VNC URL sent to Rails API"
           echo "Waiting 30 seconds for you to connect..."
-          echo "======================================================"
           sleep 30
           echo "Starting test now..."
 
