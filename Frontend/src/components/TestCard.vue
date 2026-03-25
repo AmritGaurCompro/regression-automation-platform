@@ -26,7 +26,7 @@ const { formatDateTime } = useDateFormatter()
 </script>
 
 <template>
-    <Card class="bg-[#1c2333] mt-5 cursor-pointer border-l-[#1e293b] border-l-4 border-r-2 border-t-2 border-b-2 transition-transform duration-200 hover:translate-x-2 z-0 hover:z-10 relative">
+    <Card class="bg-[#1c2333] mt-5 cursor-pointer border-l-[#1e293b] border-l-4 border-r-2 border-t-2 border-b-2 hover:border-sky-500  transition-colors duration-200 ease-out hover:bg-[#1a2740]">
     <CardHeader>
       <CardTitle class="flex justify-between gap-3 items-start flex-wrap">
 

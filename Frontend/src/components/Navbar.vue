@@ -15,10 +15,12 @@ import { useTestStore } from '@/stores/testStore';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue'
 import RecordTestModal from '@/components/RecordTestModal.vue'
+import ImportTestModal from './ImportTestModal.vue';
 
 const testStore = useTestStore();
 const { searchQuery } = storeToRefs(testStore);
 const recordModalRef = ref(null)
+const importModalRef=ref(null)
 
 const openRecordModal = () => {
   recordModalRef.value?.show()
@@ -38,6 +40,10 @@ const onTestCreated = async (newTest) => {
     }
   }, 3000)
   setTimeout(() => clearInterval(pollScript), 10 * 60 * 1000)
+}
+
+const openImportModal=()=>{
+  importModalRef.value?.show()
 }
 
 </script>
@@ -68,8 +74,11 @@ const onTestCreated = async (newTest) => {
             <div class="lg:mr-3">
                 <Button class="bg-red-500 m-3 px-3 py-5 rounded-md hover:bg-red-600 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white animate-pulse transition-all duration-200 ease-out
     hover:-translate-y-0.5 focus-visible:-translate-y-0.5 " @click="openRecordModal">● Record New</Button>
-                <Button class="px-3 py-5 rounded-md focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white hover:-translate-y-0.5 focus-visible:-translate-y-0.5">📥 Import</Button>
+   
                 <RecordTestModal ref="recordModalRef" @test-created="onTestCreated" />
+                <Button class="px-3 py-5 rounded-md focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white hover:-
+}translate-y-0.5 focus-visible:-translate-y-0.5" @click="openImportModal">📥 Import</Button>
+                <ImportTestModal ref="importModalRef" />
             </div>
         </div>
      
