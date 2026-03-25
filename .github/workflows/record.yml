@@ -13,9 +13,6 @@ on:
       test_id:
         description: 'Test ID from Rails'
         required: false
-      record_test_id:
-        description: 'Record test ID from Rails'
-        required: false
 
 jobs:
   record:
@@ -73,7 +70,7 @@ jobs:
           echo "VNC URL: $VNC_URL"
           echo "======================================================"
           echo "Sending VNC URL to Rails API..."
-          curl -s -X POST "${{ secrets.RENDER_URL }}/api/record_tests/${{ github.event.inputs.record_test_id }}/vnc_url" \
+          curl -s -X POST "${{ secrets.RENDER_URL }}/api/tests/${{ github.event.inputs.test_id }}/vnc_url" \
             -H "Content-Type: application/json" \
             -d "{\"vnc_url\": \"$VNC_URL\"}"
           echo "VNC URL sent to Rails API"
@@ -108,9 +105,10 @@ jobs:
           git commit -m "chore: add generated playwright test [${{ github.event.inputs.file_name }}]"
           git push origin ${{ github.event.inputs.branch }}
 
-      - name: Notify Rails recording complete
+      - name: Clear VNC URL on Rails
         if: always()
         run: |
-          curl -s -X POST "${{ secrets.RENDER_URL }}/api/record_tests/${{ github.event.inputs.record_test_id }}/complete" \
+          curl -s -X POST "${{ secrets.RENDER_URL }}/api/tests/${{ github.event.inputs.test_id }}/vnc_url" \
             -H "Content-Type: application/json" \
-            -d "{\"status\": \"${{ job.status }}\", \"file_name\": \"${{ github.event.inputs.file_name }}\"}"
+            -d "{\"vnc_url\": null}"
+          echo "VNC URL cleared"
