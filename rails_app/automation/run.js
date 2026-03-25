@@ -6,18 +6,22 @@ function runTests(testFile) {
   const runId = new Date().toISOString().replace(/[:.]/g, '-');
   const startTime = Date.now();
   
-  // Read environment variables
+
   const retries = process.env.PW_RETRIES || '2';
   const headed = process.env.PW_HEADED === 'true';
   const testRunId = process.env.TEST_RUN_ID || runId;
   const environment = process.env.ENVIRONMENT || 'QA';
   
 
-  const hasDisplay = !!process.env.DISPLAY;
+  const os = require('os');
+  const platform = os.platform();
+
+
+  const hasDisplay = platform === 'darwin' || !!process.env.DISPLAY;
   const isRender = !!process.env.RENDER;
   const canRunHeaded = headed && hasDisplay && !isRender;
   
-  // Build command with retries and headed/headless mode
+
   let command = `npx playwright test ${testFile}`;
   if (canRunHeaded) {
     command += ' --headed';

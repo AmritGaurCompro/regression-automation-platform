@@ -65,6 +65,7 @@ const playwrightProcess=spawn('npx',[
 playwrightProcess.on('close',(eCode)=>{
     if(eCode==0){
         console.log("Recording completed successfully")
+        convertToPlaywrightTest(outputPath) 
         process.exit(0)
     }
     else{
@@ -88,4 +89,24 @@ process.on('SIGTERM', () => {
     playwrightProcess.kill();
     process.exit(143);
 });
+function convertToPlaywrightTest(filePath) {
+    const raw = fs.readFileSync(filePath, 'utf8')
 
+    const lines = raw.split('\n')
+    const actionLines = lines.filter(line => {
+        const trimmed = line.trim()
+        return trimmed.startsWith('await page.') ||
+               trimmed.startsWith('await expect(')
+    })
+
+    const testName = path.basename(filePath, '.spec.js')
+    const body = actionLines.map(l => '  ' + l.trim()).join('\n')
+
+    const converted = `import { test, expect } from '@playwright/test';
+
+test('${testName}', async ({ page }) => {
+${body}
+});
+`
+    fs.writeFileSync(filePath, converted, 'utf8')
+}

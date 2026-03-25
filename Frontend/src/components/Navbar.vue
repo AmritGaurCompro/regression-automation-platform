@@ -24,6 +24,22 @@ const openRecordModal = () => {
   recordModalRef.value?.show()
 }
 
+const onTestCreated = async (newTest) => {
+  testStore.addTest(newTest)
+  await testStore.refreshTestsFromBackend()
+  const created = testStore.tests.find(t => t.id === newTest.id)
+  if (created) testStore.setSelectedTest(created)
+  const pollScript = setInterval(async () => {
+    await testStore.refreshTestsFromBackend()
+    const updated = testStore.tests.find(t => t.id === newTest.id)
+    if (updated?.script?.raw) {
+      testStore.setSelectedTest(updated)
+      clearInterval(pollScript)
+    }
+  }, 3000)
+  setTimeout(() => clearInterval(pollScript), 10 * 60 * 1000)
+}
+
 </script>
 
 <template>
@@ -53,7 +69,7 @@ const openRecordModal = () => {
                 <Button class="bg-red-500 m-3 px-3 py-5 rounded-md hover:bg-red-600 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white animate-pulse transition-all duration-200 ease-out
     hover:-translate-y-0.5 focus-visible:-translate-y-0.5 " @click="openRecordModal">● Record New</Button>
                 <Button class="px-3 py-5 rounded-md focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white hover:-translate-y-0.5 focus-visible:-translate-y-0.5">📥 Import</Button>
-                <RecordTestModal ref="recordModalRef" />
+                <RecordTestModal ref="recordModalRef" @test-created="onTestCreated" />
             </div>
         </div>
      

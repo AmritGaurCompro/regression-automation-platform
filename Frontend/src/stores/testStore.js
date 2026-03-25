@@ -13,7 +13,6 @@ export const useTestStore = defineStore('test', () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
   
-  // Test run configuration - shared between Sidebar and TestData
   const testRunConfig = ref({
     runner_mode: 'headless',
     retries: 2
@@ -48,6 +47,24 @@ export const useTestStore = defineStore('test', () => {
     console.error("Failed to fetch test runs:", err)
   }
 }
+function addTest(newTest) {
+    const exists = tests.value.find(t => t.id === newTest.id)
+    if (!exists) {
+      tests.value.push({
+        id: newTest.id,
+        title: newTest.title,
+        status: 'NEW',
+        environment: null,
+        lastRun: null,
+        startedAt: null,
+        finishedAt: null,
+        duration: null,
+        tags: [],
+        artifacts: [],
+        script: { raw: null, normalized: null }
+      })
+    }
+  }
 
   function setSelectedTest(test) {
     selectedTest.value = test
@@ -110,6 +127,7 @@ export const useTestStore = defineStore('test', () => {
     testRuns,
     refreshTestsFromBackend,
     fetchTestRuns,
+    addTest,
     setSelectedTest,
     updateTestRunConfig,
     clearSelectedTest,
