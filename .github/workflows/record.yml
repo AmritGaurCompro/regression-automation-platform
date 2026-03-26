@@ -74,8 +74,8 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{\"vnc_url\": \"$VNC_URL\"}"
           echo "VNC URL sent to Rails API"
-          echo "Waiting 60 seconds for you to connect and interact..."
-          sleep 60
+          echo "Waiting 30 seconds for you to connect..."
+          sleep 30
           echo "Starting codegen now..."
 
       - name: Run Playwright codegen (record)
