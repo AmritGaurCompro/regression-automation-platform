@@ -14,6 +14,23 @@ const props = defineProps({
     required: true
   }
 })
+const download = async () => {
+  try {
+    const response = await fetch(props.path)
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+
+    const a = document.createElement('a')
+    a.href = url
+    a.download = props.title
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error('Download failed:', err)
+  }
+}
 </script>
 
 <template>
@@ -43,6 +60,7 @@ const props = defineProps({
     <Button
       variant="secondary"
       class="self-start sm:self-auto focus-visible:ring-white"
+      @click="download"
     >
       Download
     </Button>
