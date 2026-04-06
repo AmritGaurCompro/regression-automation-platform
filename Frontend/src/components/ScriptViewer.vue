@@ -1,5 +1,5 @@
 <template>
-   <div class="mb-4 ml-6 gap-4">
+  <div class="mb-4 ml-6 gap-4">
     <button
       class="text-sm font-medium mr-4"
       :class="activeTab === 'raw'
@@ -21,7 +21,6 @@
     </button>
     <hr class="mr-6" />
   </div>
-
   <div class="rounded-xl bg-[#161b26] border ml-5 mr-5">
     <!-- Tabs -->
     <div class="flex items-center gap-6 border-b px-6 py-3">
@@ -32,17 +31,15 @@
         📥 Imported from Codegen
         <span class="rounded bg-background px-2 py-0.5">ORIGINAL</span>
       </div>
-
       <div
         v-else
         class="inline-flex items-center gap-2 rounded-md bg-amber-500/10 px-3 py-1 text-xs text-amber-400"
       >
         ✨ Normalized & Ready
         <span class="rounded bg-amber-500/20 px-2 py-0.5">
-          BASEURL + ENV VARS APPLIED
+          {{ normalizationApplied ? 'BASEURL + ENV VARS APPLIED' : 'PREVIEW ONLY' }}
         </span>
       </div>
-
       <div class="ml-auto">
         <button
           class="rounded-md border px-3 py-1 text-sm hover:bg-muted"
@@ -64,15 +61,22 @@
       class="flex justify-end gap-3 border-t px-6 py-4"
     >
       <button
+        v-if="!resetNormalization"
         class="rounded-md border px-4 py-2 text-sm hover:bg-muted"
-        @click="$emit('apply-normalization')"
+        @click="applyNormalization"
       >
         🔄 Apply Normalization
       </button>
-
+      <button
+        v-else
+        class="rounded-md border px-4 py-2 text-sm hover:bg-muted opacity-50 cursor-not-allowed"
+        disabled
+      >
+        ✅ Normalization Applied
+      </button>
       <button
         class="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:opacity-90"
-        @click="$emit('save-script')"
+        @click="saveToFile"
       >
         💾 Save Script
       </button>
@@ -92,20 +96,24 @@
         Enable trace & screenshots on failure
       </CardDescription>
     </CardHeader>
-  </Card> 
+  </Card>
 </template>
 
-
-
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useTestStore } from '@/stores/testStore'
+import { storeToRefs } from 'pinia'
+
 import {
   Card,
   CardDescription,
   CardHeader
 } from '@/components/ui/card'
 
-/* Props */
+const testStore = useTestStore()
+
+const { resetNormalization } = storeToRefs(testStore)
+
 const props = defineProps({
   rawScript: {
     type: String,
@@ -117,23 +125,58 @@ const props = defineProps({
   }
 })
 
-/* Emits */
 const emit = defineEmits(['copy', 'apply-normalization', 'save-script'])
 
-/* State */
 const activeTab = ref('raw')
 
-/* Computed */
-const displayedScript = computed(() =>
-  activeTab.value === 'raw'
-    ? props.rawScript
-    : props.normalizedScript
-)
+const displayedScript = computed(() => {
+  if (activeTab.value === 'raw') {
+    return props.rawScript
+  }
+  // Show normalized only if Apply Normalization was clicked
+  // otherwise show raw script in normalized tab too
+  return resetNormalization.value ? props.normalizedScript : props.rawScript
+})
 
-/* Methods */
+const applyNormalization = () => {
+  resetNormalization.value = true
+  emit('apply-normalization')
+}
+
 const onCopy = () => {
   navigator.clipboard.writeText(displayedScript.value)
   emit('copy')
 }
-</script>
 
+// Reset normalization when switching back to raw tab
+const resetNormalizationFun = () => {
+  resetNormalization.value = false
+}
+
+watch(() => activeTab.value, (newTab) => {
+  if (newTab === 'raw') {
+    resetNormalizationFun()
+  }
+})
+
+const saveToFile = () => {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+  const fileName = `script-${timestamp}.js`
+
+  const blob = new Blob([displayedScript.value], {
+    type: 'text/javascript;charset=utf-8'
+  })
+
+  const url = URL.createObjectURL(blob)
+
+  const a = document.createElement('a')
+  a.href = url
+  a.download = fileName
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+
+  URL.revokeObjectURL(url)
+}
+
+</script>

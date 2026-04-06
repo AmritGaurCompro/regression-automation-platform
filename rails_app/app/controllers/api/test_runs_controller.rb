@@ -18,7 +18,14 @@ def index
       started_at: run.started_at,
       finished_at: run.finished_at,
       created_at: run.created_at,
-      duration: calculate_duration(run)   
+      duration: calculate_duration(run),
+      artifacts: run.artifacts.map do |a|
+        {
+          kind: a.kind,
+          file_url: a.file_url,
+          metadata: a.metadata
+        }
+      end
     }
   }
 end

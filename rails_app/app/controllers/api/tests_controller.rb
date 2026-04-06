@@ -61,20 +61,99 @@ class Api::TestsController < ApplicationController
   private
 
   def load_script_content(script_id)
-    return { raw: nil, normalized: nil } if script_id.blank?
-    
-    
+  return { raw: nil, normalized: nil } if script_id.blank?
+
+  script = Script.find_by(id: script_id)
+  return { raw: nil, normalized: nil } unless script
+
+  normalized = normalize_script(script.raw_content, script_id)
+
+  {
+    raw: script.raw_content,
+    normalized: normalized
+  }
+rescue StandardError => e
+  Rails.logger.error("Error loading script #{script_id}: #{e.message}")
+  { raw: nil, normalized: nil }
+end
+
+def normalize_script(raw, script_id = nil)
+  return nil if raw.blank?
+
+  lines = raw.lines
+
+  # Remove import statements
+  lines = lines.reject { |l| l.strip.start_with?('import ') }
+
+  # Remove test wrapper line and closing brace
+  lines = lines.reject { |l| l.strip.start_with?("test('") || l.strip == '});' }
+
+  # Remove blank lines at start and end
+  lines = lines.drop_while { |l| l.strip.empty? }
+  lines = lines.reverse.drop_while { |l| l.strip.empty? }.reverse
+
+  # Remove one level of indentation (2 spaces)
+  lines = lines.map { |l| l.start_with?('  ') ? l[2..] : l }
+
+  normalized = lines.join
+
+  # 1. Replace hardcoded URLs with baseURL from Playwright config
+  normalized = normalized.gsub(
+    /page\.goto\(['"]https?:\/\/[^'"]+['"]\)/,
+    "page.goto('/')"
+  )
+
+  # 2. Replace email/username fields with process.env.TEST_USERNAME
+  normalized = normalized.gsub(
+    /(getByRole\(['"]textbox['"],\s*\{\s*name:\s*['"](?:email|Email|username|Username|user|User)['"'][^}]*\}\s*\)\.fill\()['"][^'"]*['"]/,
+    '\1process.env.TEST_USERNAME'
+  )
+  normalized = normalized.gsub(
+    /(getBy(?:Label|Placeholder)\(['"](?:email|Email|username|Username|user|User)['"]\)\.fill\()['"][^'"]*['"]/,
+    '\1process.env.TEST_USERNAME'
+  )
+
+  # 3. Replace password fields with process.env.TEST_PASSWORD
+  normalized = normalized.gsub(
+    /(getByRole\(['"]textbox['"],\s*\{\s*name:\s*['"](?:password|Password|passwd|Passwd)['"'][^}]*\}\s*\)\.fill\()['"][^'"]*['"]/,
+    '\1process.env.TEST_PASSWORD'
+  )
+  normalized = normalized.gsub(
+    /(getBy(?:Label|Placeholder)\(['"](?:password|Password|passwd|Passwd)['"]\)\.fill\()['"][^'"]*['"]/,
+    '\1process.env.TEST_PASSWORD'
+  )
+
+  # 4. Replace phone number
+  normalized = normalized.gsub(
+    /(getBy(?:Role|Label|Placeholder)\([^)]*['"](?:phone|Phone|mobile|Mobile|tel|Tel)['"'][^)]*\)\.fill\()['"][^'"]*['"]/,
+    '\1process.env.TEST_PHONE'
+  )
+
+  # 5. Replace OTP / verification code
+  normalized = normalized.gsub(
+    /(getBy(?:Role|Label|Placeholder)\([^)]*['"](?:otp|OTP|code|Code|verification|Verification)['"'][^)]*\)\.fill\()['"][^'"]*['"]/,
+    '\1process.env.TEST_OTP'
+  )
+
+  # 6. Replace credit card
+  normalized = normalized.gsub(
+    /(getBy(?:Role|Label|Placeholder)\([^)]*['"](?:card|Card|credit|Credit|cvv|CVV)['"'][^)]*\)\.fill\()['"][^'"]*['"]/,
+    '\1process.env.TEST_CARD'
+  )
+
+  # Save normalized content to DB
+  if script_id.present?
     script = Script.find_by(id: script_id)
-    return { raw: nil, normalized: nil } unless script
-    
-    {
-      raw: script.raw_content,
-      normalized: script.normalized_content
-    }
-  rescue StandardError => e
-    Rails.logger.error("Error loading script #{script_id}: #{e.message}")
-    { raw: nil, normalized: nil }
+    if script
+      script.update!(normalized_content: normalized)
+    end
   end
+
+  normalized
+rescue StandardError => e
+  Rails.logger.error("Error normalizing script: #{e.message}")
+  raw
+end
 
   def calculate_duration(test_run)
     return nil unless test_run&.created_at && test_run&.updated_at

@@ -11,6 +11,7 @@ import RunResult from '@/components/RunResult.vue'
 const testStore = useTestStore()
 const { selectedTest } = storeToRefs(testStore)
 
+// Test-level properties (from Test model)
 const environment = computed({
   get: () => selectedTest.value?.environment || '',
   set: val => (selectedTest.value.environment = val)
@@ -37,52 +38,9 @@ const retries = computed({
   set: val => (selectedTest.value.retries_on_failure = val)
 })
 
-
-const decodeHtmlEntities = (text) => {
-  if (!text || typeof text !== 'string' || !text.trim()) return null
-  const textarea = document.createElement('textarea')
-  textarea.innerHTML = text
-  return textarea.value.trim() || null
-}
-
-const extractScriptParts = (script) => {
-  // already a proper object from axios JSON parsing
-  if (script && typeof script === 'object' && !Array.isArray(script)) {
-    return { raw: script.raw ?? null, normalized: script.normalized ?? null }
-  }
-  // string — try JSON.parse in case it was double-encoded
-  if (typeof script === 'string' && script.trim()) {
-    try {
-      const parsed = JSON.parse(script)
-      if (parsed && typeof parsed === 'object') {
-        return { raw: parsed.raw ?? null, normalized: parsed.normalized ?? null }
-      }
-    } catch {
-      // plain script string (old backend format) — treat as raw
-      return { raw: script, normalized: script }
-    }
-  }
-  return { raw: null, normalized: null }
-}
-
-const rawScriptContent = computed(() => {
-  const script = selectedTest.value?.script
-  if (!script) return '// No script available'
-  const { raw } = extractScriptParts(script)
-  return decodeHtmlEntities(raw) || '// No raw script available'
-})
-
-const normalizedScriptContent = computed(() => {
-  const script = selectedTest.value?.script
-  if (!script) return '// No normalized script available'
-  const { normalized } = extractScriptParts(script)
-  return decodeHtmlEntities(normalized) || '// No normalized script available'
-})
-
+const rawScriptContent = computed(() => selectedTest.value?.script.raw || '// No script available')
+const normalizedScriptContent = computed(() => selectedTest.value?.script.normalized || '// No script available') 
 const scriptFilename = computed(() => selectedTest.value?.script_filename || `${selectedTest.value?.title}.spec.js`)
-
-
-
 </script>
 
 <template>
@@ -115,6 +73,7 @@ const scriptFilename = computed(() => selectedTest.value?.script_filename || `${
       v-if="selectedTest"
       :rawScript="rawScriptContent"
       :normalizedScript="normalizedScriptContent"
+      :scriptFilename="scriptFilename"
     />
     
     <RunResult v-if="selectedTest" />

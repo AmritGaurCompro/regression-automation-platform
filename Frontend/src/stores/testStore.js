@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
 
+
 export const useTestStore = defineStore('test', () => {
   const selectedTest = ref(null)
   const searchQuery = ref('')
@@ -11,8 +12,8 @@ export const useTestStore = defineStore('test', () => {
   const pollingInterval = ref(null)
   const runEndTime = ref(null)
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+  const resetNormalization = ref(false)
 
-  
   const testRunConfig = ref({
     runner_mode: 'headless',
     retries: 2
@@ -67,7 +68,9 @@ function addTest(newTest) {
   }
 
   function setSelectedTest(test) {
+    resetNormalization.value = false
     selectedTest.value = test
+
   }
 
   function updateTestRunConfig(config) {
@@ -125,6 +128,7 @@ function addTest(newTest) {
     runEndTime,
     testRunConfig,
     testRuns,
+    resetNormalization,
     refreshTestsFromBackend,
     fetchTestRuns,
     addTest,
