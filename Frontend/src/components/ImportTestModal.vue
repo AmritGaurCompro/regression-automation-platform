@@ -136,12 +136,12 @@ defineExpose({ show })
 
 <template>
 <Dialog v-model:open="open">
-  <DialogContent>
+  <DialogContent class="max-h-[90vh] overflow-hidden flex flex-col">
     <DialogHeader>
       <DialogTitle>Import Test</DialogTitle>
     </DialogHeader>
 
-    <div class="mt-10">
+    <div class="mt-4 overflow-y-auto flex-1 p-2">
 
       <input
         ref="currFileInp"

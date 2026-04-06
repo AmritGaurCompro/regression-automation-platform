@@ -31,7 +31,8 @@ defineProps({
 
 <div class="flex flex-col items-center lg:flex-row gap-3 flex-wrap">
 
-  <Card class="mt-5 rounded-lg overflow-hidden w-full lg:w-1/3 bg-[#1c2333] h-28 flex-wrap">
+  <div class="w-full lg:flex lg:gap-12 lg:justify-center">
+  <Card class="mt-5 rounded-lg overflow-hidden w-full lg:w-11/12 bg-[#1c2333] h-28 flex-wrap ">
     <CardHeader>
       <CardTitle class="text-center text-[#10b981] text-2xl font-bold ">{{ passCnt }}</CardTitle>
     </CardHeader>
@@ -41,7 +42,7 @@ defineProps({
     </CardFooter>
   </Card>
   
-  <Card class="mt-5 rounded-lg overflow-hidden w-full lg:w-1/3 bg-[#1c2333] h-28">
+  <Card class="mt-5 rounded-lg overflow-hidden w-full lg:w-11/12 bg-[#1c2333] h-28">
     <CardHeader>
       <CardTitle class="text-center text-[#ef4444] text-2xl font-bold">{{ failCnt }}</CardTitle>
     </CardHeader>
@@ -51,7 +52,10 @@ defineProps({
     </CardFooter>
   </Card>
 
-  <Card class="mt-5 rounded-lg overflow-hidden w-full  lg:w-1/3 bg-[#1c2333] h-28">
+  </div>
+
+  <div class="w-full lg:flex lg:gap-12 lg:justify-center">
+  <Card class="mt-5 rounded-lg overflow-hidden w-full  lg:w-1/2 bg-[#1c2333] h-28">
     <CardHeader>
       <CardTitle class="text-center text-slate-500 text-2xl font-bold ">{{ runCnt }}</CardTitle>
     </CardHeader>
@@ -60,6 +64,7 @@ defineProps({
      RUNNING
     </CardFooter>
   </Card>
+  </div>
 
   </div>
 </template>

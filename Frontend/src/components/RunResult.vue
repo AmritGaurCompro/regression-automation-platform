@@ -113,10 +113,9 @@ const fileArtifacts = computed(() =>
 >
   <CardHeader class="p-4">
     <CardDescription class="text-xs text-[#64748b] leading-5">
-      ℹ️ <span class="font-semibold">MVP Note:</span>
+      ℹ️ <span class="font-semibold">MVP Note: </span>
       Runs are triggered manually from the Rails UI. Playwright executes
-      headlessly and stores exit codes and artifacts. No CI/CD integration
-      in this phase.
+      headless/headed and stores exit codes and artifacts ( Only for the failed runs ) .
     </CardDescription>
   </CardHeader>
 </Card>    
