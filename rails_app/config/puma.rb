@@ -21,8 +21,8 @@ worker_timeout 3600 if ENV.fetch("RAILS_ENV", "development") == "development"
 #
 environment ENV.fetch("RAILS_ENV") { "development" }
 
-# Bind to localhost only in development
-bind "tcp://127.0.0.1:#{ENV.fetch('PORT') { 3000 }}"
+# Bind on all interfaces so cloud load balancers can reach the app.
+bind "tcp://0.0.0.0:#{ENV.fetch('PORT') { 3000 }}"
 
 # Specifies the `pidfile` that Puma will use.
 pidfile ENV.fetch("PIDFILE") { "tmp/pids/server.pid" }

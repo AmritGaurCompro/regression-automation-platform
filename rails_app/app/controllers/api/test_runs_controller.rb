@@ -19,7 +19,7 @@ def index
       finished_at: run.finished_at,
       created_at: run.created_at,
       duration: calculate_duration(run),
-      vnc_url: run.vnc_url
+      vnc_url: run.vnc_url,
       duration: calculate_duration(run),
       artifacts: run.artifacts.map do |a|
         {
