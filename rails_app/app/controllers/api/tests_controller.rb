@@ -178,5 +178,14 @@ end
 rescue => e
   render json: { error: e.message }, status: 422
  end
+
+  def update_script_content
+    test = Test.find(params[:id])
+    script = Script.find(test.script_id)
+    script.update!(raw_content: params[:content], normalized_content: params[:content])
+    render json: { success: true }
+  rescue => e
+    render json: { error: e.message }, status: 422
+  end
   
 end

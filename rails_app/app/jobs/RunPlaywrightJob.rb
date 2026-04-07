@@ -4,9 +4,13 @@ class RunPlaywrightJob < ApplicationJob
   def perform(test_run_id)
     test_run = TestRun.find(test_run_id)
     if test_run.runner_mode == 'headed'
-      trigger_github_actions(test_run)
+      if Rails.env.production?
+        trigger_github_actions(test_run)
+      else
+        run_locally(test_run, headed: true)
+      end
     else
-      run_locally(test_run)
+      run_locally(test_run, headed: false)
     end
   rescue => e
     test_run.update!(status: "failed", finished_at: Time.current) if test_run
@@ -73,7 +77,7 @@ class RunPlaywrightJob < ApplicationJob
     end
   end
 
-  def run_locally(test_run)
+  def run_locally(test_run, headed: false)
     test = test_run.test
     node_path = `which node`.strip
     script_path = Rails.root.join('automation/run.js')
@@ -81,11 +85,12 @@ class RunPlaywrightJob < ApplicationJob
 
     puts "=== RUN LOCALLY ==="
     puts "Running Playwright locally with spec: #{spec_name}"
+    puts "Headed requested: #{headed}"
     $stdout.flush
 
     env_vars = {
       'PW_RETRIES' => test_run.retries_on_failure.to_s,
-      'PW_HEADED' => 'false',
+      'PW_HEADED' => headed ? 'true' : 'false',
       'TEST_RUN_ID' => test_run.id.to_s,
       'ENVIRONMENT' => test_run.environment.to_s
     }

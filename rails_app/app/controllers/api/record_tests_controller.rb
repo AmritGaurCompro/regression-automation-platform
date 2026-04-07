@@ -31,67 +31,73 @@ class Api::RecordTestsController < ActionController::API
       script_id: script.id
     )
 
-    command = "#{node_path} #{script_path} record #{file_name}"
-    pid = Process.spawn(command, chdir: Rails.root.join('automation').to_s)
-    Process.detach(pid)
+    if Rails.env.development?
+      command = "#{node_path} #{script_path} record #{file_name}"
+      pid = Process.spawn(command, chdir: Rails.root.join('automation').to_s)
+      Process.detach(pid)
 
-    script_id = script.id
+      script_id = script.id
 
-    Thread.new do
-      begin
-        Process.wait(pid)
-      rescue Errno::ECHILD
-      end
-
-      sleep 2
-
-      if File.exist?(file_path) && File.size(file_path) > 0
+      Thread.new do
         begin
-          raw = File.read(file_path)
-          Script.find(script_id).update!(
-            raw_content: raw,
-            normalized_content: raw
-          )
-          Rails.logger.info("Script synced after process exit: #{file_name}")
-        rescue => e
-          Rails.logger.error("Failed to sync script #{file_name}: #{e.message}")
+          Process.wait(pid)
+        rescue Errno::ECHILD
         end
-      else
-        Rails.logger.warn("File missing or empty after process exit: #{file_name}")
+
+        sleep 2
+
+        if File.exist?(file_path) && File.size(file_path) > 0
+          begin
+            raw = File.read(file_path)
+            Script.find(script_id).update!(
+              raw_content: raw,
+              normalized_content: raw
+            )
+            Rails.logger.info("Script synced after process exit: #{file_name}")
+          rescue => e
+            Rails.logger.error("Failed to sync script #{file_name}: #{e.message}")
+          end
+        else
+          Rails.logger.warn("File missing or empty after process exit: #{file_name}")
+        end
       end
     end
 
-    render json: {
-      file: file_name,
-      status: 'recording_started',
-      new_test: { id: new_record.id, title: test_title, status: 'NEW' }
-    }
+    # Trigger GitHub workflow only in production
+    if Rails.env.production?
+      response = HTTParty.post(
+        "https://api.github.com/repos/AmritGaurCompro/regression-automation-platform/actions/workflows/record.yml/dispatches",
+        headers: {
+          "Authorization" => "Bearer #{ENV['GITHUB_PAT']}",
+          "Accept" => "application/vnd.github.v3+json",
+          "Content-Type" => "application/json"
+        },
+        body: {
+          ref: "QA3.0",
+          inputs: {
+            file_name: file_name,
+            branch: "QA3.0",
+            test_id: test_id.to_s
+          }
+        }.to_json,
+        timeout: 10
+      )
 
-    response = HTTParty.post(
-      "https://api.github.com/repos/AmritGaurCompro/regression-automation-platform/actions/workflows/record.yml/dispatches",
-      headers: {
-        "Authorization" => "Bearer #{ENV['GITHUB_PAT']}",
-        "Accept" => "application/vnd.github.v3+json",
-        "Content-Type" => "application/json"
-      },
-      body: {
-        ref: "QA2.0",
-        inputs: {
-          file_name: file_name,
-          branch: "QA2.0",
-          test_id: test_id.to_s
+      if response.code == 204
+        render json: {
+          file: file_name,
+          status: 'recording_started',
+          new_test: { id: new_record.id, title: test_title, status: 'NEW' }
         }
-      }.to_json,
-      timeout: 10
-    )
-
-    if response.code == 204
+      else
+        render json: { error: "Failed to trigger workflow: #{response.body}" }, status: :unprocessable_entity
+      end
+    else
       render json: {
         file: file_name,
-        status: 'recording_started'
+        status: 'recording_started_locally',
+        new_test: { id: new_record.id, title: test_title, status: 'NEW' }
       }
-    else
-      render json: { error: "Failed to trigger workflow: #{response.body}" }, status: :unprocessable_entity
     end
 
   rescue => e
