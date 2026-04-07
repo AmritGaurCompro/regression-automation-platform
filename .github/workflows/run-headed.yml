@@ -23,7 +23,7 @@ on:
 
   push:
     branches:
-      - QA2.0
+      - QA3.0
     paths:
       - 'rails_app/**'
       - '.github/workflows/run-headed.yml'

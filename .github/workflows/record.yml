@@ -9,7 +9,7 @@ on:
       branch:
         description: 'Branch to checkout and commit back to'
         required: false
-        default: 'QA2.0'
+        default: 'QA3.0'
       test_id:
         description: 'Test ID from Rails'
         required: false
