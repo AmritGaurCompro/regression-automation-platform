@@ -19,6 +19,8 @@ def index
       finished_at: run.finished_at,
       created_at: run.created_at,
       duration: calculate_duration(run),
+      vnc_url: run.vnc_url
+      duration: calculate_duration(run),
       artifacts: run.artifacts.map do |a|
         {
           kind: a.kind,
@@ -56,8 +58,6 @@ end
     }, status: :created
   end
   
-  
-  
   def calculate_duration(test_run)
     return nil unless test_run&.created_at && test_run&.updated_at
 
@@ -71,5 +71,45 @@ end
       "#{minutes}m #{seconds}s"
     end
   end
+
+def update_vnc_url
+  test_run = TestRun.find(params[:id])
+  test_run.update!(vnc_url: params[:vnc_url])
+  render json: { success: true }
+rescue => e
+  render json: { error: e.message }, status: 422
+end
+
+    def receive_artifacts
+  test_run = TestRun.find(params[:id])
+
+  # Save error log
+  if params[:errors].present?
+    Artifact.create!(
+      test_run: test_run,
+      kind: 'error_log',
+      file_url: nil,
+      metadata: params[:errors]
+    )
+  end
+
+  # Save cloudinary URLs
+  (params[:artifacts] || []).each do |att|
+    Artifact.create!(
+      test_run: test_run,
+      kind: att[:kind],
+      file_url: att[:file_url]
+    )
+  end
+
+  test_run.update!(
+    status: params[:success] ? 'passed' : 'failed',
+    finished_at: Time.current
+  )
+
+  render json: { success: true }
+rescue => e
+  render json: { error: e.message }, status: 422
+end
 
 end

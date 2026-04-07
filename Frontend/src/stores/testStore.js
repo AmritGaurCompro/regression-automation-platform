@@ -11,6 +11,7 @@ export const useTestStore = defineStore('test', () => {
   const testRuns = ref([])
   const pollingInterval = ref(null)
   const runEndTime = ref(null)
+  const vncOpened = ref(false)
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
   const resetNormalization = ref(false)
 
@@ -24,9 +25,9 @@ export const useTestStore = defineStore('test', () => {
       const res = await axios.get(`${API_BASE_URL}/api/tests`)
       tests.value = res.data
 
-       console.log('script field from API:', res.data[0]?.script)
-    console.log('type:', typeof res.data[0]?.script)
-      
+      console.log('script field from API:', res.data[0]?.script)
+      console.log('type:', typeof res.data[0]?.script)
+
       if (selectedTest.value) {
         const updated = res.data.find(t => t.id === selectedTest.value.id)
         if (updated) {
@@ -91,25 +92,38 @@ function addTest(newTest) {
 
   function startPolling(testId) {
     stopPolling()
-     pollingInterval.value = setInterval(async () => {
-     await refreshTestsFromBackend()
-     await fetchTestRuns(testId)
-     const updatedTest = tests.value.find(t => t.id === testId)
+    vncOpened.value = false
+
+    pollingInterval.value = setInterval(async () => {
+      await refreshTestsFromBackend()
+      await fetchTestRuns(testId)
+
+      const updatedTest = tests.value.find(t => t.id === testId)
       if (!updatedTest) return
       setSelectedTest(updatedTest)
-      if (updatedTest.status === "passed") {
+
+      // Auto-open VNC URL if available and not already opened
+      if (!vncOpened.value && updatedTest.vnc_url) {
+        vncOpened.value = true
+        window.open(updatedTest.vnc_url, '_blank')
+      }
+
+      // Stop polling when passed
+      if (updatedTest.status === 'passed') {
         stopPolling()
         return
       }
-       if (updatedTest.status === "failed") {
-         const traceArtifact = updatedTest.artifacts?.find(
-         a => a.kind === "trace"
-  )
-  if (traceArtifact && traceArtifact.url) {
-    stopPolling()
-    return
-  }
-}
+
+      // Stop polling when failed and trace artifact available
+      if (updatedTest.status === 'failed') {
+        const traceArtifact = updatedTest.artifacts?.find(
+          a => a.kind === 'trace'
+        )
+        if (traceArtifact && traceArtifact.url) {
+          stopPolling()
+          return
+        }
+      }
     }, 3000)
   }
 
@@ -118,6 +132,7 @@ function addTest(newTest) {
       clearInterval(pollingInterval.value)
       pollingInterval.value = null
       runEndTime.value = new Date()
+      vncOpened.value = false
     }
   }
 
