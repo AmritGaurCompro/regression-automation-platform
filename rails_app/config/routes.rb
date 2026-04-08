@@ -7,6 +7,7 @@ Rails.application.routes.draw do
       post 'script_content', to: 'tests#update_script_content', on: :member
       resources :test_runs, only: [:index, :create, :show] do
         post 'artifacts', to: 'test_runs#receive_artifacts', on: :member
+        post 'vnc_url', to: 'test_runs#update_vnc_url', on: :member
       end
     end
   end
