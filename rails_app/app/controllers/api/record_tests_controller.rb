@@ -96,6 +96,7 @@ class Api::RecordTestsController < ActionController::API
       render json: {
         file: file_name,
         status: 'recording_started_locally',
+        vnc_url: vnc_url,
         new_test: { id: new_record.id, title: test_title, status: 'NEW' }
       }
     end

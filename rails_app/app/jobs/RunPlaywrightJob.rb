@@ -88,12 +88,30 @@ class RunPlaywrightJob < ApplicationJob
     puts "Headed requested: #{headed}"
     $stdout.flush
 
+    vnc_url = nil
+    if headed
+      # Start VNC setup for local headed run
+      puts "Setting up VNC for headed run..."
+      system("Xvfb :99 -screen 0 1280x720x24 &")
+      sleep 2
+      system("x11vnc -display :99 -forever -nopw -bg -quiet -shared")
+      system("websockify --web /usr/share/novnc 6080 localhost:5900 &")
+      sleep 3
+      vnc_url = "http://localhost:6080/vnc.html"
+      test_run.update!(vnc_url: vnc_url)
+      puts "VNC URL set: #{vnc_url}"
+    end
+
     env_vars = {
       'PW_RETRIES' => test_run.retries_on_failure.to_s,
       'PW_HEADED' => headed ? 'true' : 'false',
       'TEST_RUN_ID' => test_run.id.to_s,
       'ENVIRONMENT' => test_run.environment.to_s
     }
+
+    if headed
+      env_vars['DISPLAY'] = ':99'
+    end
 
     env_string = env_vars.map { |k, v| "#{k}=#{v}" }.join(' ')
     command = "#{env_string} #{node_path} #{script_path} #{spec_name} 2>&1"
