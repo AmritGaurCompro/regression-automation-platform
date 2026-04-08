@@ -4,13 +4,9 @@ class RunPlaywrightJob < ApplicationJob
   def perform(test_run_id)
     test_run = TestRun.find(test_run_id)
     if test_run.runner_mode == 'headed'
-      if Rails.env.production?
-        trigger_github_actions(test_run)
-      else
-        run_locally(test_run, headed: true)
-      end
+      trigger_github_actions(test_run)
     else
-      run_locally(test_run, headed: false)
+      run_locally(test_run)
     end
   rescue => e
     test_run.update!(status: "failed", finished_at: Time.current) if test_run
@@ -77,7 +73,7 @@ class RunPlaywrightJob < ApplicationJob
     end
   end
 
-  def run_locally(test_run, headed: false)
+  def run_locally(test_run)
     test = test_run.test
     node_path = `which node`.strip
     script_path = Rails.root.join('automation/run.js')
@@ -85,33 +81,14 @@ class RunPlaywrightJob < ApplicationJob
 
     puts "=== RUN LOCALLY ==="
     puts "Running Playwright locally with spec: #{spec_name}"
-    puts "Headed requested: #{headed}"
     $stdout.flush
-
-    vnc_url = nil
-    if headed
-      # Start VNC setup for local headed run
-      puts "Setting up VNC for headed run..."
-      system("Xvfb :99 -screen 0 1280x720x24 &")
-      sleep 2
-      system("x11vnc -display :99 -forever -nopw -bg -quiet -shared")
-      system("websockify --web /usr/share/novnc 6080 localhost:5900 &")
-      sleep 3
-      vnc_url = "http://localhost:6080/vnc.html"
-      test_run.update!(vnc_url: vnc_url)
-      puts "VNC URL set: #{vnc_url}"
-    end
 
     env_vars = {
       'PW_RETRIES' => test_run.retries_on_failure.to_s,
-      'PW_HEADED' => headed ? 'true' : 'false',
+      'PW_HEADED' => 'false',
       'TEST_RUN_ID' => test_run.id.to_s,
       'ENVIRONMENT' => test_run.environment.to_s
     }
-
-    if headed
-      env_vars['DISPLAY'] = ':99'
-    end
 
     env_string = env_vars.map { |k, v| "#{k}=#{v}" }.join(' ')
     command = "#{env_string} #{node_path} #{script_path} #{spec_name} 2>&1"

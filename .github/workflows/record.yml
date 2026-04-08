@@ -96,14 +96,6 @@ jobs:
             exit 1
           fi
 
-      - name: Send script content to Rails API
-        run: |
-          FILE_CONTENT=$(cat rails_app/automation/tests/${{ github.event.inputs.file_name }} | jq -Rs .)
-          curl -s -X POST "${{ secrets.RENDER_URL }}/api/tests/${{ github.event.inputs.test_id }}/script_content" \
-            -H "Content-Type: application/json" \
-            -d "{\"content\": $FILE_CONTENT}"
-          echo "Script content sent to Rails API"
-
       - name: Commit generated test back to branch
         run: |
           git config user.name "github-actions[bot]"
