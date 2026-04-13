@@ -14,15 +14,15 @@ threads min_threads_count, max_threads_count
 worker_timeout 3600 if ENV.fetch("RAILS_ENV", "development") == "development"
 
 # Specifies the `port` that Puma will listen on to receive requests; default is 3000.
-#
-port ENV.fetch("PORT") { 3000 }
+# Commented out - using explicit bind directive below instead
+# port ENV.fetch("PORT") { 3000 }
 
 # Specifies the `environment` that Puma will run in.
 #
 environment ENV.fetch("RAILS_ENV") { "development" }
 
-# Bind to all interfaces in production (required for Render and other cloud platforms)
-bind "tcp://0.0.0.0:#{ENV.fetch('PORT') { 3000 }}"
+# Bind to localhost only in development
+bind "tcp://127.0.0.1:#{ENV.fetch('PORT') { 3000 }}"
 
 # Specifies the `pidfile` that Puma will use.
 pidfile ENV.fetch("PIDFILE") { "tmp/pids/server.pid" }

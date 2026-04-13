@@ -1,45 +1,49 @@
 class Api::RecordTestsController < ActionController::API
+
   def create
     title = params[:title]
+    test_id = params[:test_id]
     return render json: { error: 'Title missing' }, status: :bad_request if title.blank?
 
     file_name = title.ends_with?('.spec.js') ? title : "#{title}.spec.js"
 
-    tests_dir = Rails.root.join('automation/tests')
-    file_path = tests_dir.join(file_name)
+    response = HTTParty.post(
+      "https://api.github.com/repos/AmritGaurCompro/regression-automation-platform/actions/workflows/record.yml/dispatches",
+      headers: {
+        "Authorization" => "Bearer #{ENV['GITHUB_PAT']}",
+        "Accept" => "application/vnd.github.v3+json",
+        "Content-Type" => "application/json"
+      },
+      body: {
+        ref: "QA2.0",
+        inputs: {
+          file_name: file_name,
+          branch: "QA2.0",
+          test_id: test_id.to_s
+        }
+      }.to_json,
+      timeout: 10
+    )
 
-    if File.exist?(file_path)
-      return render json: { error: 'File name already exists' }, status: :conflict
+    if response.code == 204
+      render json: {
+        file: file_name,
+        status: 'recording_started'
+      }
+    else
+      render json: { error: "Failed to trigger workflow: #{response.body}" }, status: :unprocessable_entity
     end
 
-    node_path = `which node`.strip
-    return render json: { error: 'Node not found' }, status: :internal_server_error if node_path.blank?
-
-    script_path = Rails.root.join('automation/record.js')
-    return render json: { error: 'record.js not found' }, status: :internal_server_error unless File.exist?(script_path)
-
-    command = "#{node_path} #{script_path} record #{file_name}"
-
-   pid = Process.spawn(
-  command,
-  chdir: Rails.root.join('automation').to_s
-)
-Process.detach(pid)
-
-    render json: {
-      file: file_name,
-      status: 'recording_started'
-    }
+  rescue => e
+    render json: { error: e.message }, status: :internal_server_error
   end
 
-def index
-  tests_dir = Rails.root.join('automation/tests')
-  
-  files = Dir.glob(tests_dir.join('*.spec.js')).map do |file|
-    { name: File.basename(file), path: file }
+  def index
+    tests_dir = Rails.root.join('automation/tests')
+    files = Dir.glob(tests_dir.join('*.spec.js')).map do |file|
+      { name: File.basename(file), path: file }
+    end
+    render json: files
   end
 
-  render json: files
-end
-  
 end

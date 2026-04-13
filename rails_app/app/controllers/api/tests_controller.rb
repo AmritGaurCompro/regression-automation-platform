@@ -17,6 +17,7 @@ class Api::TestsController < ApplicationController
         finishedAt: last_run&.updated_at,
         duration: calculate_duration(last_run),
         tags: last_run&.tags || [],
+        vnc_url: last_run&.vnc_url, 
         script: load_script_content(t.script_id),
         artifacts: last_run&.artifacts&.map do |a|
           {
@@ -45,6 +46,7 @@ class Api::TestsController < ApplicationController
       finishedAt: last_run&.updated_at,
       duration: calculate_duration(last_run),
       tags: last_run&.tags || [],
+      vnc_url: last_run&.vnc_url,
       script: load_script_content(test.script_id),
       artifacts: last_run&.artifacts&.map do |a|
         {
@@ -89,4 +91,13 @@ class Api::TestsController < ApplicationController
       "#{minutes}m #{seconds}s"
     end
   end
+
+  def update_vnc_url
+  test = Test.find(params[:id])
+  test.update!(vnc_url: params[:vnc_url])
+  render json: { success: true }
+rescue => e
+  render json: { error: e.message }, status: 422
+ end
+  
 end
