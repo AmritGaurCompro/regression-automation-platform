@@ -14,7 +14,8 @@ export const useTestStore = defineStore('test', () => {
   const vncOpened = ref(false)
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
   const resetNormalization = ref(false)
-
+  
+  // Test run configuration - shared between Sidebar and TestData
   const testRunConfig = ref({
     runner_mode: 'headless',
     retries: 2
@@ -40,16 +41,17 @@ export const useTestStore = defineStore('test', () => {
   }
 
   async function fetchTestRuns(testId) {
-    if (!testId) return
-    try {
-      const res = await axios.get(`${API_BASE_URL}/api/tests/${testId}/test_runs`)
-      testRuns.value = res.data
-    } catch (err) {
-      console.error("Failed to fetch test runs:", err)
-    }
+  if (!testId) return
+
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/tests/${testId}/test_runs`)
+    testRuns.value = res.data
+  } catch (err) {
+    console.error("Failed to fetch test runs:", err)
   }
-<<<<<<< HEAD
 }
+
+
 function addTest(newTest) {
     const exists = tests.value.find(t => t.id === newTest.id)
     if (!exists) {
@@ -68,8 +70,6 @@ function addTest(newTest) {
       })
     }
   }
-=======
->>>>>>> 042efddf1ed7e01f355a3c11153c2e04a80baec6
 
   function setSelectedTest(test) {
     resetNormalization.value = false
@@ -146,11 +146,11 @@ function addTest(newTest) {
     runEndTime,
     testRunConfig,
     testRuns,
-<<<<<<< HEAD
+
     resetNormalization,
-=======
+
     vncOpened,
->>>>>>> 042efddf1ed7e01f355a3c11153c2e04a80baec6
+
     refreshTestsFromBackend,
     fetchTestRuns,
     addTest,
