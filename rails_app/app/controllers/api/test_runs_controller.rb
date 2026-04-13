@@ -20,7 +20,7 @@ def index
       created_at: run.created_at,
       duration: calculate_duration(run),
       vnc_url: run.vnc_url,
-        artifacts: run.artifacts.map do |a|
+      artifacts: run.artifacts.map do |a|
           {
             kind: a.kind,
             file_url: a.file_url,
