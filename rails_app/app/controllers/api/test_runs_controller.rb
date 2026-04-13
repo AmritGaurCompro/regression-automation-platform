@@ -19,15 +19,16 @@ def index
       finished_at: run.finished_at,
       created_at: run.created_at,
       duration: calculate_duration(run),
-      artifacts: run.artifacts.map do |a|
-        {
-          kind: a.kind,
-          file_url: a.file_url,
-          metadata: a.metadata
-        },
-     vnc_url: run.vnc_url
+      vnc_url: run.vnc_url,
+        artifacts: run.artifacts.map do |a|
+          {
+            kind: a.kind,
+            file_url: a.file_url,
+            metadata: a.metadata
+          }
+        end
+      }
     }
-  }
 end
 
   def show
