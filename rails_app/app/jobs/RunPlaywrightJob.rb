@@ -19,7 +19,7 @@ class RunPlaywrightJob < ApplicationJob
 
   def trigger_github_actions(test_run)
     test = test_run.test
-    spec_name = "#{test.title}.spec.js"
+    spec_name = resolved_spec_name_for(test)
 
     puts "=== TRIGGER GITHUB ACTIONS ==="
     puts "spec_name: #{spec_name}"
@@ -77,7 +77,7 @@ class RunPlaywrightJob < ApplicationJob
     test = test_run.test
     node_path = `which node`.strip
     script_path = Rails.root.join('automation/run.js')
-    spec_name = "#{test.title}.spec.js"
+    spec_name = ensure_spec_file_for_local_run!(test)
 
     puts "=== RUN LOCALLY ==="
     puts "Running Playwright locally with spec: #{spec_name}"
@@ -113,5 +113,31 @@ class RunPlaywrightJob < ApplicationJob
     end
 
     UploadArtifactsJob.perform_later(test_run.id)
+  end
+
+  def resolved_spec_name_for(test)
+    name = test.script&.name.presence || "#{test.title}.spec.js"
+    base = File.basename(name)
+    base.ends_with?('.spec.js') ? base : "#{base}.spec.js"
+  end
+
+  def ensure_spec_file_for_local_run!(test)
+    spec_name = resolved_spec_name_for(test)
+    script_content = test.script&.raw_content.presence || test.script&.normalized_content
+
+    raise "Script content is missing for test ##{test.id}" if script_content.blank?
+
+    tests_dir = Rails.root.join('automation', 'tests')
+    FileUtils.mkdir_p(tests_dir)
+
+    file_path = tests_dir.join(spec_name)
+    should_write = !File.exist?(file_path) || File.read(file_path) != script_content
+
+    if should_write
+      File.write(file_path, script_content)
+      Rails.logger.info("RunPlaywrightJob: synced spec file #{spec_name} from DB")
+    end
+
+    spec_name
   end
 end

@@ -11,6 +11,7 @@ class Api::ImportTestsController < ActionController::API
     file_name = base_name.ends_with?('.spec.js') ? base_name : "#{base_name}.spec.js"
 
     tests_dir = Rails.root.join('automation', 'tests')
+    FileUtils.mkdir_p(tests_dir)
     file_path = tests_dir.join(file_name)
     test_title = file_name.sub('.spec.js', '')
 
