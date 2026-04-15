@@ -20,53 +20,6 @@ class Api::TestsController < ApplicationController
 
   # Called by GitHub Actions after recording finishes (production flow)
   # Saves recorded script content to Render disk + DB
-def script_content
-  test    = Test.find(params[:id])
-  script  = test.script
-  content = params[:content].to_s
-
-  Rails.logger.info("=== SCRIPT CONTENT CALLBACK ===")
-  Rails.logger.info("test_id: #{test.id}, script present: #{script.present?}, content length: #{content.length}")
-
-  return render json: { error: 'Content missing' },                     status: :bad_request          if content.blank?
-  return render json: { error: 'No script associated with this test' }, status: :unprocessable_entity unless script
-
-  tests_dir = Rails.root.join('automation', 'tests')
-  FileUtils.mkdir_p(tests_dir)
-  file_path = tests_dir.join(script.name)
-
-  File.write(file_path, content)
-  Rails.logger.info("Written to disk: #{file_path}, size: #{File.size(file_path)}")
-
-  script.update!(raw_content: content, normalized_content: content)
-  Rails.logger.info("DB updated for script ##{script.id}")
-
-  # Clear VNC URL now that recording is complete
-  test.update!(vnc_url: nil)
-
-  render json: { status: 'saved', file: script.name }
-
-rescue ActiveRecord::RecordNotFound
-  render json: { error: 'Test not found' }, status: :not_found
-rescue => e
-  Rails.logger.error("script_content failed: #{e.message}\n#{e.backtrace.join("\n")}")
-  render json: { error: e.message }, status: :internal_server_error
-end
-
-  # Called by GitHub Actions to set/clear VNC URL during recording
-def update_vnc_url
-  test = Test.find(params[:id])
-
-  # Recording flow: no TestRun exists, save on Test itself
-  # Run flow: this endpoint shouldn't be called (test_runs#update_vnc_url handles it)
-  test.update!(vnc_url: params[:vnc_url])
-  render json: { success: true }
-
-rescue ActiveRecord::RecordNotFound
-  render json: { error: 'Test not found' }, status: :not_found
-rescue => e
-  render json: { error: e.message }, status: :unprocessable_entity
-end
 
   private
 
