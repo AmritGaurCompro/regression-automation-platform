@@ -20,46 +20,53 @@ class Api::TestsController < ApplicationController
 
   # Called by GitHub Actions after recording finishes (production flow)
   # Saves recorded script content to Render disk + DB
-  def script_content
-    test    = Test.find(params[:id])
-    script  = test.script
-    content = params[:content].to_s
+def script_content
+  test    = Test.find(params[:id])
+  script  = test.script
+  content = params[:content].to_s
 
-    return render json: { error: 'Content missing' }, status: :bad_request if content.blank?
-    return render json: { error: 'No script associated with this test' }, status: :unprocessable_entity unless script
+  Rails.logger.info("=== SCRIPT CONTENT CALLBACK ===")
+  Rails.logger.info("test_id: #{test.id}, script present: #{script.present?}, content length: #{content.length}")
 
-    # Write to disk — same as ImportTestsController
-    tests_dir = Rails.root.join('automation', 'tests')
-    FileUtils.mkdir_p(tests_dir)
-    File.write(tests_dir.join(script.name), content)
+  return render json: { error: 'Content missing' },                     status: :bad_request          if content.blank?
+  return render json: { error: 'No script associated with this test' }, status: :unprocessable_entity unless script
 
-    # Sync to DB
-    script.update!(raw_content: content, normalized_content: content)
+  tests_dir = Rails.root.join('automation', 'tests')
+  FileUtils.mkdir_p(tests_dir)
+  file_path = tests_dir.join(script.name)
 
-    render json: { status: 'saved', file: script.name }
+  File.write(file_path, content)
+  Rails.logger.info("Written to disk: #{file_path}, size: #{File.size(file_path)}")
 
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Test not found' }, status: :not_found
-  rescue => e
-    Rails.logger.error("script_content callback failed: #{e.message}")
-    render json: { error: e.message }, status: :internal_server_error
-  end
+  script.update!(raw_content: content, normalized_content: content)
+  Rails.logger.info("DB updated for script ##{script.id}")
+
+  # Clear VNC URL now that recording is complete
+  test.update!(vnc_url: nil)
+
+  render json: { status: 'saved', file: script.name }
+
+rescue ActiveRecord::RecordNotFound
+  render json: { error: 'Test not found' }, status: :not_found
+rescue => e
+  Rails.logger.error("script_content failed: #{e.message}\n#{e.backtrace.join("\n")}")
+  render json: { error: e.message }, status: :internal_server_error
+end
 
   # Called by GitHub Actions to set/clear VNC URL during recording
-  def update_vnc_url
-    test     = Test.find(params[:id])
-    last_run = test.test_runs.order(created_at: :desc).first
+def update_vnc_url
+  test = Test.find(params[:id])
 
-    return render json: { error: 'No test run found' }, status: :not_found unless last_run
+  # Recording flow: no TestRun exists, save on Test itself
+  # Run flow: this endpoint shouldn't be called (test_runs#update_vnc_url handles it)
+  test.update!(vnc_url: params[:vnc_url])
+  render json: { success: true }
 
-    last_run.update!(vnc_url: params[:vnc_url])
-    render json: { success: true }
-
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Test not found' }, status: :not_found
-  rescue => e
-    render json: { error: e.message }, status: :unprocessable_entity
-  end
+rescue ActiveRecord::RecordNotFound
+  render json: { error: 'Test not found' }, status: :not_found
+rescue => e
+  render json: { error: e.message }, status: :unprocessable_entity
+end
 
   private
 
@@ -74,7 +81,7 @@ class Api::TestsController < ApplicationController
       finishedAt:  last_run&.updated_at,
       duration:    calculate_duration(last_run),
       tags:        last_run&.tags || [],
-      vnc_url:     last_run&.vnc_url,
+      vnc_url:     last_run&.vnc_url.presence || test.vnc_url,
       script:      load_script_content(test.script_id),
       artifacts:   last_run&.artifacts&.map do |a|
         {

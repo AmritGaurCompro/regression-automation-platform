@@ -57,22 +57,47 @@ jobs:
           sleep 3
           echo "noVNC started on port 6080"
 
-      - name: Start Cloudflare tunnel
+      - name: Start Cloudflare tunnel and notify Rails
         run: |
           wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
           sudo dpkg -i cloudflared-linux-amd64.deb
           cloudflared tunnel --url http://localhost:6080 > /tmp/cloudflared.log 2>&1 &
           sleep 10
+
+          echo "=== Cloudflare log ==="
+          cat /tmp/cloudflared.log
+
           URL=$(cat /tmp/cloudflared.log | grep -o 'https://[a-zA-Z0-9.-]*\.trycloudflare\.com' | head -1)
+          echo "=== Extracted URL: '${URL}' ==="
+
+          if [ -z "$URL" ]; then
+            echo "❌ Failed to extract Cloudflare URL"
+            exit 1
+          fi
+
           VNC_URL="${URL}/vnc.html"
           echo "======================================================"
           echo "VNC URL: $VNC_URL"
+          echo "test_id: ${{ github.event.inputs.test_id }}"
+          echo "Target: ${{ secrets.RENDER_URL }}/api/tests/${{ github.event.inputs.test_id }}/vnc_url"
           echo "======================================================"
-          echo "Sending VNC URL to Rails API..."
-          curl -s -X POST "${{ secrets.RENDER_URL }}/api/tests/${{ github.event.inputs.test_id }}/vnc_url" \
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "${{ secrets.RENDER_URL }}/api/tests/${{ github.event.inputs.test_id }}/vnc_url" \
             -H "Content-Type: application/json" \
-            -d "{\"vnc_url\": \"$VNC_URL\"}"
-          echo "VNC URL sent to Rails API"
+            -d "{\"vnc_url\": \"$VNC_URL\"}")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -1)
+          echo "Response code: $HTTP_CODE"
+          echo "Response body: $BODY"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Failed to send VNC URL to Rails (code: $HTTP_CODE)"
+            echo "❌ Body: $BODY"
+            exit 1
+          fi
+
+          echo "✅ VNC URL sent successfully"
           echo "Waiting 30 seconds for you to connect..."
           sleep 30
           echo "Starting codegen now..."
@@ -103,7 +128,16 @@ jobs:
             echo "❌ Test file not found, cannot send to Rails"
             exit 1
           fi
-          echo "✅ Sending script content to Rails..."
+
+          echo "File size: $(wc -c < "$FILE") bytes"
+          echo "File preview:"
+          head -5 "$FILE"
+
+          echo "======================================================"
+          echo "Sending script content to Rails..."
+          echo "Target: ${{ secrets.RENDER_URL }}/api/tests/${{ github.event.inputs.test_id }}/script_content"
+          echo "======================================================"
+
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             "${{ secrets.RENDER_URL }}/api/tests/${{ github.event.inputs.test_id }}/script_content" \
             -H "Content-Type: application/json" \
@@ -112,16 +146,24 @@ jobs:
           BODY=$(echo "$RESPONSE" | head -1)
           echo "Response code: $HTTP_CODE"
           echo "Response body: $BODY"
+
           if [ "$HTTP_CODE" != "200" ]; then
             echo "❌ Failed to save script to Rails"
             exit 1
           fi
+
           echo "✅ Script saved to Render disk + DB"
 
       - name: Clear VNC URL on Rails
         if: always()
         run: |
-          curl -s -X POST "${{ secrets.RENDER_URL }}/api/tests/${{ github.event.inputs.test_id }}/vnc_url" \
+          echo "Clearing VNC URL..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "${{ secrets.RENDER_URL }}/api/tests/${{ github.event.inputs.test_id }}/vnc_url" \
             -H "Content-Type: application/json" \
-            -d "{\"vnc_url\": null}"
+            -d "{\"vnc_url\": null}")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -1)
+          echo "Response code: $HTTP_CODE"
+          echo "Response body: $BODY"
           echo "VNC URL cleared"
