@@ -59,11 +59,14 @@ function postToRails(testId, content, railsUrl) {
     const url = new URL(`/api/record_callbacks/${testId}/script_content`, railsUrl)
     const lib = url.protocol === 'https:' ? https : http
 
+    console.log(`Posting to: ${url.toString()}`)
+    console.log(`Content length: ${payload.length}`)
+
     const req = lib.request(
       {
         hostname: url.hostname,
         port: url.port || (url.protocol === 'https:' ? 443 : 80),
-        path: url.pathname,
+        path: url.pathname + url.search,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -74,7 +77,8 @@ function postToRails(testId, content, railsUrl) {
         let body = ''
         res.on('data', chunk => (body += chunk))
         res.on('end', () => {
-          if (res.statusCode === 200) {
+          console.log(`Response status: ${res.statusCode}`)
+          if (res.statusCode === 200 || res.statusCode === 201) {
             console.log('✅ Script saved to Rails DB:', body)
             resolve()
           } else {
@@ -83,7 +87,12 @@ function postToRails(testId, content, railsUrl) {
         })
       }
     )
-    req.on('error', reject)
+
+    req.on('error', err => {
+      console.error('Request error:', err.message)
+      reject(err)
+    })
+
     req.write(payload)
     req.end()
   })
@@ -108,6 +117,7 @@ playwrightProcess.on('close', async (eCode) => {
     process.exit(1)
   }
 
+  console.log('Converting to Playwright test format...')
   const converted = convertToPlaywrightTest(outputPath)
 
   const testId   = process.env.TEST_ID
@@ -115,22 +125,20 @@ playwrightProcess.on('close', async (eCode) => {
 
   console.log(`TEST_ID: ${testId}`)
   console.log(`RAILS_URL: ${railsUrl}`)
-  console.log(`Content length: ${converted.length}`)
 
   if (!testId) {
-    console.error('❌ TEST_ID not set — cannot save to Rails')
+    console.error('❌ TEST_ID environment variable not set')
     process.exit(1)
   }
 
   try {
     await postToRails(testId, converted, railsUrl)
-    console.log('✅ Script saved to Rails DB')
   } catch (err) {
     console.error('❌ Failed to save script to Rails:', err.message)
     process.exit(1)
   }
 
-  console.log('Done.')
+  console.log('✅ Done - script saved successfully')
   process.exit(0)
 })
 

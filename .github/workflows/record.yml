@@ -118,34 +118,6 @@ jobs:
             exit 1
           fi
 
-      - name: Send recorded script content back to Rails
-        working-directory: rails_app/automation
-        run: |
-          FILE="tests/${{ github.event.inputs.file_name }}"
-          if [ ! -f "$FILE" ]; then
-            echo "❌ Test file not found"
-            exit 1
-          fi
-
-          echo "File size: $(wc -c < "$FILE") bytes"
-          head -5 "$FILE"
-
-          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
-            "${{ secrets.RENDER_URL }}/api/record_callbacks/${{ github.event.inputs.test_id }}/script_content" \
-            -H "Content-Type: application/json" \
-            -d "{\"content\": $(cat "$FILE" | jq -Rs .)}")
-          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
-          BODY=$(echo "$RESPONSE" | head -1)
-          echo "Response code: $HTTP_CODE"
-          echo "Response body: $BODY"
-
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "❌ Failed to save script to Rails"
-            exit 1
-          fi
-
-          echo "✅ Script saved to Render disk + DB"
-
       - name: Clear VNC URL on Rails
         if: always()
         run: |
