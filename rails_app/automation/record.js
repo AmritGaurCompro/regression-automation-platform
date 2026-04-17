@@ -113,15 +113,21 @@ playwrightProcess.on('close', async (eCode) => {
   const testId   = process.env.TEST_ID
   const railsUrl = process.env.RAILS_URL || 'http://localhost:3000'
 
-  if (testId) {
-    try {
-      await postToRails(testId, converted, railsUrl)
-    } catch (err) {
-      console.error('❌ Failed to save script to Rails:', err.message)
-      process.exit(1)
-    }
-  } else {
-    console.warn('TEST_ID not set — skipping Rails sync (script saved to disk only).')
+  console.log(`TEST_ID: ${testId}`)
+  console.log(`RAILS_URL: ${railsUrl}`)
+  console.log(`Content length: ${converted.length}`)
+
+  if (!testId) {
+    console.error('❌ TEST_ID not set — cannot save to Rails')
+    process.exit(1)
+  }
+
+  try {
+    await postToRails(testId, converted, railsUrl)
+    console.log('✅ Script saved to Rails DB')
+  } catch (err) {
+    console.error('❌ Failed to save script to Rails:', err.message)
+    process.exit(1)
   }
 
   console.log('Done.')

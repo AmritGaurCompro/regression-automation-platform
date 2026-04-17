@@ -102,6 +102,8 @@ jobs:
         working-directory: rails_app/automation
         env:
           DISPLAY: ':99'
+          TEST_ID: ${{ github.event.inputs.test_id }}
+          RAILS_URL: ${{ secrets.RENDER_URL }}
         run: node record.js record ${{ github.event.inputs.file_name }}
 
       - name: Verify generated test file exists
