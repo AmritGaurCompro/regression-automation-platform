@@ -86,33 +86,9 @@ class Api::RecordTestsController < ActionController::API
       return render json: { error: 'record.js not found' }, status: :internal_server_error
     end
 
-    command = "#{node_path} #{script_path} record #{file_name}"
+    command = "TEST_ID=#{test.id} RAILS_URL=http://localhost:3000 #{node_path} #{script_path} record #{file_name}"
     pid = Process.spawn(command, chdir: Rails.root.join('automation').to_s)
     Process.detach(pid)
-
-    # Watch for file after recording stops, then sync content to DB
-    script_id = script.id
-    Thread.new do
-      begin
-        Process.wait(pid)
-      rescue Errno::ECHILD
-      end
-      sleep 2
-      if File.exist?(file_path) && File.size(file_path) > 0
-        begin
-          raw = File.read(file_path)
-          Script.find(script_id).update!(
-            raw_content:        raw,
-            normalized_content: raw
-          )
-          Rails.logger.info("RecordTestsController: synced #{file_name} from disk after local recording")
-        rescue => e
-          Rails.logger.error("Failed to sync script #{file_name}: #{e.message}")
-        end
-      else
-        Rails.logger.warn("File missing or empty after local recording: #{file_name}")
-      end
-    end
 
     render json: {
       file:     file_name,
