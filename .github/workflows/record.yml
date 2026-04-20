@@ -104,6 +104,7 @@ jobs:
           DISPLAY: ':99'
           TEST_ID: ${{ github.event.inputs.test_id }}
           RAILS_URL: ${{ secrets.RENDER_URL }}
+          NODE_DEBUG: http,https
         run: node record.js record ${{ github.event.inputs.file_name }}
 
       - name: Verify generated test file exists
@@ -128,3 +129,11 @@ jobs:
           HTTP_CODE=$(echo "$RESPONSE" | tail -1)
           echo "Clear VNC response code: $HTTP_CODE"
           echo "VNC URL cleared"
+
+      - name: Test Rails endpoint connectivity
+        run: |
+          echo "Testing connection to: ${{ secrets.RENDER_URL }}"
+          curl -v -X POST \
+            "${{ secrets.RENDER_URL }}/api/record_callbacks/test/script_content" \
+            -H "Content-Type: application/json" \
+            -d '{"content": "test"}' || echo "Connection test failed"

@@ -59,27 +59,38 @@ function postToRails(testId, content, railsUrl) {
     const url = new URL(`/api/record_callbacks/${testId}/script_content`, railsUrl)
     const lib = url.protocol === 'https:' ? https : http
 
-    console.log(`Posting to: ${url.toString()}`)
-    console.log(`Content length: ${payload.length}`)
+    console.log(`\n=== POSTING TO RAILS ===`)
+    console.log(`Full URL: ${url.toString()}`)
+    console.log(`Hostname: ${url.hostname}`)
+    console.log(`Port: ${url.port || (url.protocol === 'https:' ? 443 : 80)}`)
+    console.log(`Path: ${url.pathname}`)
+    console.log(`Method: POST`)
+    console.log(`Content length: ${payload.length} bytes`)
+    console.log(`Content preview: ${content.substring(0, 150)}...\n`)
 
     const req = lib.request(
       {
         hostname: url.hostname,
         port: url.port || (url.protocol === 'https:' ? 443 : 80),
-        path: url.pathname + url.search,
+        path: url.pathname,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(payload)
-        }
+        },
+        timeout: 30000
       },
       res => {
+        console.log(`Response received - Status: ${res.statusCode}`)
         let body = ''
-        res.on('data', chunk => (body += chunk))
+        res.on('data', chunk => {
+          console.log(`Received chunk: ${chunk.length} bytes`)
+          body += chunk
+        })
         res.on('end', () => {
-          console.log(`Response status: ${res.statusCode}`)
+          console.log(`Response body: ${body}`)
           if (res.statusCode === 200 || res.statusCode === 201) {
-            console.log('✅ Script saved to Rails DB:', body)
+            console.log('✅ Script saved to Rails DB')
             resolve()
           } else {
             reject(new Error(`Rails responded ${res.statusCode}: ${body}`))
@@ -89,10 +100,18 @@ function postToRails(testId, content, railsUrl) {
     )
 
     req.on('error', err => {
-      console.error('Request error:', err.message)
+      console.error('❌ Request error:', err.message)
+      console.error('Error code:', err.code)
       reject(err)
     })
 
+    req.on('timeout', () => {
+      console.error('❌ Request timeout')
+      req.destroy()
+      reject(new Error('Request timeout after 30s'))
+    })
+
+    console.log('Sending request...')
     req.write(payload)
     req.end()
   })
