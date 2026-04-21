@@ -48,7 +48,7 @@ class Api::RecordTestsController < ActionController::API
         "Content-Type"  => "application/json"
       },
       body: {
-        ref: "QA2.0",
+        ref: "QA4.0",
         inputs: {
           file_name: file_name,
           test_id:   test.id.to_s
