@@ -1,6 +1,11 @@
 Rails.application.routes.draw do
   namespace :api do
-    resources :record_tests, only: [:index,:create]
+    resources :record_tests, only: [:index, :create] do
+      member do
+        post 'vnc_url'
+        post 'script_content'
+      end
+    end
     resources :import_tests, only: [:create]
     resources :tests do
       post 'vnc_url', to: 'tests#update_vnc_url', on: :member

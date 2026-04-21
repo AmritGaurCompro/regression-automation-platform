@@ -80,7 +80,7 @@ jobs:
           echo "test_id: ${{ github.event.inputs.test_id }}"
 
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
-            "${{ secrets.RENDER_URL }}/api/record_callbacks/${{ github.event.inputs.test_id }}/vnc_url" \
+            "${{ secrets.RENDER_URL }}/api/record_tests/${{ github.event.inputs.test_id }}/vnc_url" \
             -H "Content-Type: application/json" \
             -d "{\"vnc_url\": \"$VNC_URL\"}")
           HTTP_CODE=$(echo "$RESPONSE" | tail -1)
@@ -119,21 +119,38 @@ jobs:
             exit 1
           fi
 
+      - name: Send script content to Rails
+        working-directory: rails_app/automation
+        run: |
+          FILE="tests/${{ github.event.inputs.file_name }}"
+          CONTENT=$(cat "$FILE")
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "${{ secrets.RENDER_URL }}/api/record_tests/${{ github.event.inputs.test_id }}/script_content" \
+            -H "Content-Type: application/json" \
+            --data-binary @- <<EOF
+          {"content": $(echo "$CONTENT" | jq -Rs .)}
+          EOF
+          )
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -1)
+          echo "Response code: $HTTP_CODE"
+          echo "Response body: $BODY"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Failed to send script content to Rails"
+            exit 1
+          fi
+
+          echo "✅ Script content saved to DB"
+
       - name: Clear VNC URL on Rails
         if: always()
         run: |
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
-            "${{ secrets.RENDER_URL }}/api/record_callbacks/${{ github.event.inputs.test_id }}/vnc_url" \
+            "${{ secrets.RENDER_URL }}/api/record_tests/${{ github.event.inputs.test_id }}/vnc_url" \
             -H "Content-Type: application/json" \
-            -d "{\"vnc_url\": null}")
+            -d '{"vnc_url": null}')
           HTTP_CODE=$(echo "$RESPONSE" | tail -1)
           echo "Clear VNC response code: $HTTP_CODE"
           echo "VNC URL cleared"
-
-      - name: Test Rails endpoint connectivity
-        run: |
-          echo "Testing connection to: ${{ secrets.RENDER_URL }}"
-          curl -v -X POST \
-            "${{ secrets.RENDER_URL }}/api/record_callbacks/test/script_content" \
-            -H "Content-Type: application/json" \
-            -d '{"content": "test"}' || echo "Connection test failed"
