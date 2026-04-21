@@ -56,7 +56,7 @@ ${body}
 function postToRails(testId, content, railsUrl) {
   return new Promise((resolve, reject) => {
     const payload = JSON.stringify({ content })
-    const url = new URL(`/api/record_callbacks/${testId}/script_content`, railsUrl)
+    const url = new URL(`/api/record_tests/${testId}/script_content`, railsUrl)
     const lib = url.protocol === 'https:' ? https : http
 
     console.log(`\n=== POSTING TO RAILS ===`)
