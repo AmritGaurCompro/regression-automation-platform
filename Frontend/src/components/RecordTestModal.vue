@@ -59,6 +59,9 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useTestStore } from '@/stores/testStore'
+const store = useTestStore()
+
 
 const open = ref(false)
 const fileName = ref('')
@@ -93,13 +96,13 @@ const validate = () => {
 
 const save = async () => {
   if (error.value || !fileName.value) return
-
   try {
     const response = await axios.post(`${API_BASE_URL}/api/record_tests`, {
       title: fileName.value
     })
-
-    emit('test-created', response.data.new_test)
+    const newTest = response.data.new_test
+    store.startRecordPolling(newTest.id)
+    emit('test-created', newTest)
     close()
   } catch (err) {
     error.value = err.response?.data?.error || 'Something went wrong'

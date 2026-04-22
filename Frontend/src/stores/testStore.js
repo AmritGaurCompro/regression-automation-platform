@@ -14,7 +14,9 @@ export const useTestStore = defineStore('test', () => {
   const vncOpened = ref(false)
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
   const resetNormalization = ref(false)
-  
+
+  const recordingActive = ref(false)
+
   // Test run configuration - shared between Sidebar and TestData
   const testRunConfig = ref({
     runner_mode: 'headless',
@@ -130,6 +132,32 @@ function addTest(newTest) {
     }, 3000)
   }
 
+  function startRecordPolling(testId) {
+  stopPolling()
+  vncOpened.value = false
+  recordingActive.value = true
+
+  pollingInterval.value = setInterval(async () => {
+    await refreshTestsFromBackend()
+
+    const updatedTest = tests.value.find(t => t.id === testId)
+    if (!updatedTest) return
+    setSelectedTest(updatedTest)
+
+    // Only auto-open VNC in production
+    if (import.meta.env.PROD && !vncOpened.value && updatedTest.vnc_url) {
+      vncOpened.value = true
+      window.open(updatedTest.vnc_url, '_blank')
+    }
+
+    // Stop polling once script is saved
+    if (updatedTest.script?.raw) {
+      recordingActive.value = false
+      stopPolling()
+    }
+  }, 3000)
+}
+
   function stopPolling() {
     if (pollingInterval.value) {
       clearInterval(pollingInterval.value)
@@ -139,6 +167,8 @@ function addTest(newTest) {
     }
   }
 
+  
+
   return {
     tests,
     selectedTest,
@@ -146,11 +176,12 @@ function addTest(newTest) {
     runEndTime,
     testRunConfig,
     testRuns,
+    recordingActive,
 
     resetNormalization,
 
     vncOpened,
-
+    startRecordPolling,
     refreshTestsFromBackend,
     fetchTestRuns,
     addTest,
