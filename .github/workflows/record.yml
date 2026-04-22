@@ -98,6 +98,12 @@ jobs:
           sleep 30
           echo "Starting codegen now..."
 
+      - name: Wake up Render
+        run: |
+          echo "Pinging Render to wake it up..."
+          curl -s --max-time 90 "${{ secrets.RENDER_URL }}/api/tests" > /dev/null || true
+          echo "Render should be awake now"
+
       - name: Run Playwright codegen (record)
         working-directory: rails_app/automation
         env:

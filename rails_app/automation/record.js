@@ -78,7 +78,7 @@ function postToRails(testId, content, railsUrl) {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(payload)
         },
-        timeout: 30000
+        timeout: 90000
       },
       res => {
         console.log(`Response received - Status: ${res.statusCode}`)
@@ -108,7 +108,7 @@ function postToRails(testId, content, railsUrl) {
     req.on('timeout', () => {
       console.error('❌ Request timeout')
       req.destroy()
-      reject(new Error('Request timeout after 30s'))
+      reject(new Error('Request timeout after 90s'))
     })
 
     console.log('Sending request...')
