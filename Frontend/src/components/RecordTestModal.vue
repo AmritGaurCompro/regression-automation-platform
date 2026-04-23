@@ -59,8 +59,7 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useTestStore } from '@/stores/testStore'
-const store = useTestStore()
+
 
 
 const open = ref(false)
@@ -100,9 +99,7 @@ const save = async () => {
     const response = await axios.post(`${API_BASE_URL}/api/record_tests`, {
       title: fileName.value
     })
-    const newTest = response.data.new_test
-    store.startRecordPolling(newTest.id)
-    emit('test-created', newTest)
+    emit('test-created', response.data.new_test)
     close()
   } catch (err) {
     error.value = err.response?.data?.error || 'Something went wrong'
