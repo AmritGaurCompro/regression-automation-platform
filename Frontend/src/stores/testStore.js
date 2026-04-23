@@ -137,26 +137,31 @@ function addTest(newTest) {
   vncOpened.value = false
   recordingActive.value = true
 
-  pollingInterval.value = setInterval(async () => {
-    await refreshTestsFromBackend()
+  // Wait 15s before polling — gives workflow time to POST vnc_url without DB contention
+  setTimeout(() => {
+    pollingInterval.value = setInterval(async () => {
+      await refreshTestsFromBackend()
 
-    const updatedTest = tests.value.find(t => t.id === testId)
-    if (!updatedTest) return
-    setSelectedTest(updatedTest)
+      const updatedTest = tests.value.find(t => t.id === testId)
+      if (!updatedTest) return
+      setSelectedTest(updatedTest)
 
-    // Only auto-open VNC in production
-    if (import.meta.env.PROD && !vncOpened.value && updatedTest.vnc_url) {
-      vncOpened.value = true
-      window.open(updatedTest.vnc_url, '_blank')
-    }
+      // Only auto-open VNC in production
+      if (import.meta.env.PROD && !vncOpened.value && updatedTest.vnc_url) {
+        vncOpened.value = true
+        window.open(updatedTest.vnc_url, '_blank')
+      }
 
-    // Stop polling once script is saved
-    if (updatedTest.script?.raw) {
-      recordingActive.value = false
-      stopPolling()
-    }
-  }, 3000)
+      // Stop polling once script is saved
+      if (updatedTest.script?.raw) {
+        recordingActive.value = false
+        stopPolling()
+      }
+    }, 10000) // poll every 10s instead of 3s
+  }, 15000) // wait 15s before first poll
 }
+
+
 
   function stopPolling() {
     if (pollingInterval.value) {
