@@ -115,6 +115,13 @@ class Api::TestsController < ApplicationController
     raw
   end
 
+  def script
+    test = Test.find(params[:id])
+    render json: { script: test.script }, status: :ok
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Test not found' }, status: :not_found
+  end
+
   def calculate_duration(test_run)
     return nil unless test_run&.created_at && test_run&.updated_at
     duration_seconds = (test_run.updated_at - test_run.created_at).to_i

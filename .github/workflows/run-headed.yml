@@ -1,11 +1,7 @@
 name: Playwright Run (Headed via Xvfb)
-
 on:
   workflow_dispatch:
     inputs:
-      test_file:
-        description: 'Test file name inside tests/ folder (e.g. login.spec.js)'
-        required: true
       environment:
         description: 'Environment label (QA, DEV, PROD)'
         required: false
@@ -16,11 +12,10 @@ on:
         default: '2'
       test_run_id:
         description: 'Test run ID from Rails'
-        required: false
+        required: true
       test_id:
         description: 'Test ID from Rails'
-        required: false
-
+        required: true
   push:
     branches:
       - QA2.0
@@ -32,7 +27,6 @@ jobs:
   run-headed:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -79,21 +73,53 @@ jobs:
           echo "======================================================"
           echo "VNC URL: $VNC_URL"
           echo "======================================================"
-          echo "Sending VNC URL to Rails API..."
           curl -v -X POST "${{ secrets.RENDER_URL }}/api/tests/${{ github.event.inputs.test_id }}/test_runs/${{ github.event.inputs.test_run_id }}/vnc_url" \
             -H "Content-Type: application/json" \
             -d "{\"vnc_url\": \"$VNC_URL\"}"
-          echo "VNC URL sent to Rails API"
           echo "Waiting 30 seconds for you to connect..."
           sleep 30
           echo "Starting test now..."
 
       - name: Debug inputs
         run: |
-          echo "test_file: ${{ github.event.inputs.test_file }}"
           echo "test_run_id: ${{ github.event.inputs.test_run_id }}"
           echo "test_id: ${{ github.event.inputs.test_id }}"
           echo "environment: ${{ github.event.inputs.environment }}"
+
+      - name: Fetch script from Rails DB and write to temp file
+        id: fetch_script
+        run: |
+          TEST_ID="${{ github.event.inputs.test_id }}"
+          echo "Fetching script for test_id=$TEST_ID..."
+
+          HTTP_STATUS=$(curl -s -o /tmp/script_response.json -w "%{http_code}" \
+            "${{ secrets.RENDER_URL }}/api/tests/$TEST_ID/script")
+
+          echo "HTTP status: $HTTP_STATUS"
+
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "ERROR: Rails API returned $HTTP_STATUS — cannot fetch script"
+            exit 1
+          fi
+
+          SCRIPT_CONTENT=$(python3 -c "
+          import sys, json
+          data = json.load(open('/tmp/script_response.json'))
+          content = data.get('script', {}).get('raw', '').strip()
+          if not content:
+              sys.exit(1)
+          print(content)
+          ")
+
+          if [ $? -ne 0 ]; then
+            echo "ERROR: raw script is empty in API response"
+            exit 1
+          fi
+
+          TEMP_FILE="rails_app/automation/tests/_dynamic_test.spec.js"
+          echo "$SCRIPT_CONTENT" > "$TEMP_FILE"
+          echo "Script written to $TEMP_FILE"
+          echo "temp_file=$TEMP_FILE" >> $GITHUB_OUTPUT
 
       - name: Run Playwright tests (headed via Xvfb)
         working-directory: rails_app/automation
@@ -106,7 +132,7 @@ jobs:
           TEST_ID: ${{ github.event.inputs.test_id }}
           BASE_URL: ${{ secrets.VERCEL_URL }}
           RAILS_API_URL: ${{ secrets.RENDER_URL }}
-        run: node run.js ${{ github.event.inputs.test_file }}
+        run: node run.js ${{ steps.fetch_script.outputs.temp_file }}
 
       - name: Upload artifacts to Cloudinary + notify Rails
         if: always()
