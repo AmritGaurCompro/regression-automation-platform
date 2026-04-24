@@ -52,7 +52,6 @@ class RunPlaywrightJob < ApplicationJob
         body: {
           ref: "QA4.0",
           inputs: {
-            test_file: spec_name,
             environment: test_run.environment.to_s,
             retries: test_run.retries_on_failure.to_s,
             test_run_id: test_run.id.to_s,
