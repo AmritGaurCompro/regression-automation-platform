@@ -117,7 +117,7 @@ class Api::TestsController < ApplicationController
 
   def script
     test = Test.find(params[:id])
-    render json: { script: test.script }, status: :ok
+    render json: { script: { raw: test.script.raw_content, normalized: test.script.normalized_content } }, status: :ok
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Test not found' }, status: :not_found
   end
