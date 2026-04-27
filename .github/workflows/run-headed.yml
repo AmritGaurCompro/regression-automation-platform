@@ -89,23 +89,34 @@ jobs:
       - name: Wake up Render service
         run: |
           echo "Pinging Render to wake up..."
-          curl -s --max-time 60 "${{ secrets.RENDER_URL }}/api/tests" -o /dev/null || true
-          echo "Render is awake"
+          curl -s --max-time 90 "${{ secrets.RENDER_URL }}/api/tests" -o /dev/null || true
+          echo "Waiting for Render to fully wake..."
+          sleep 15
+          echo "Render should be awake"
 
       - name: Fetch script from Rails DB and write to temp file
         id: fetch_script
         run: |
           TEST_ID="${{ github.event.inputs.test_id }}"
           echo "Fetching script for test_id=$TEST_ID..."
-            HTTP_STATUS=$(curl -s -o /tmp/script_response.json -w "%{http_code}" \
-            --max-time 30 \
-            "${{ secrets.RENDER_URL }}/api/tests/$TEST_ID/script")
 
+          for i in 1 2 3; do
+            echo "Attempt $i..."
+            HTTP_STATUS=$(curl -s -o /tmp/script_response.json -w "%{http_code}" \
+              --max-time 90 \
+              "${{ secrets.RENDER_URL }}/api/tests/$TEST_ID/script")
             echo "HTTP status: $HTTP_STATUS"
-            if [ "$HTTP_STATUS" != "200" ]; then
-              echo "ERROR: Rails API returned $HTTP_STATUS — cannot fetch script"
-              exit 1
+            if [ "$HTTP_STATUS" = "200" ]; then
+              break
             fi
+            echo "Attempt $i failed, waiting 20s before retry..."
+            sleep 20
+          done
+
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "ERROR: Rails API returned $HTTP_STATUS after 3 attempts"
+            exit 1
+          fi
 
           SCRIPT_CONTENT=$(python3 -c "
           import sys, json
