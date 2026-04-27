@@ -18,6 +18,13 @@ class Api::TestsController < ApplicationController
     render json: build_test_data(test, last_run)
   end
 
+  def script
+    test = Test.find(params[:id])
+    render json: { script: { raw: test.script.raw_content, normalized: test.script.normalized_content } }, status: :ok
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Test not found' }, status: :not_found
+  end
+
   # Called by GitHub Actions after recording finishes (production flow)
   # Saves recorded script content to Render disk + DB
 
@@ -113,13 +120,6 @@ class Api::TestsController < ApplicationController
   rescue StandardError => e
     Rails.logger.error("Error normalizing script: #{e.message}")
     raw
-  end
-
-  def script
-    test = Test.find(params[:id])
-    render json: { script: { raw: test.script.raw_content, normalized: test.script.normalized_content } }, status: :ok
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Test not found' }, status: :not_found
   end
 
   def calculate_duration(test_run)
