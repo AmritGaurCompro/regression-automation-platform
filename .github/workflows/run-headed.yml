@@ -135,7 +135,7 @@ jobs:
           TEMP_FILE="rails_app/automation/tests/_dynamic_test.spec.js"
           echo "$SCRIPT_CONTENT" > "$TEMP_FILE"
           echo "Script written to $TEMP_FILE"
-          echo "temp_file=$TEMP_FILE" >> $GITHUB_OUTPUT
+          echo "temp_file=_dynamic_test.spec.js" >> $GITHUB_OUTPUT
 
       - name: Run Playwright tests (headed via Xvfb)
         working-directory: rails_app/automation
