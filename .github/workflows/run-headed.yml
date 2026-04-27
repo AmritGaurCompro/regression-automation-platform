@@ -85,6 +85,12 @@ jobs:
           echo "test_run_id: ${{ github.event.inputs.test_run_id }}"
           echo "test_id: ${{ github.event.inputs.test_id }}"
           echo "environment: ${{ github.event.inputs.environment }}"
+ 
+      - name: Wake up Render service
+        run: |
+          echo "Pinging Render to wake up..."
+          curl -s --max-time 60 "${{ secrets.RENDER_URL }}/api/tests" -o /dev/null || true
+          echo "Render is awake"
 
       - name: Fetch script from Rails DB and write to temp file
         id: fetch_script
