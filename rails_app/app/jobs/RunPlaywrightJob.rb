@@ -1,5 +1,9 @@
+require 'open3'
+
 class RunPlaywrightJob < ApplicationJob
   queue_as :default
+
+  LOCAL_RUN_TIMEOUT_SECONDS = 8.minutes.to_i
 
   def perform(test_run_id)
     test_run = TestRun.find(test_run_id)
@@ -87,12 +91,16 @@ class RunPlaywrightJob < ApplicationJob
   def run_locally(test_run, headed: false)
     test = test_run.test
     node_path = `which node`.strip
-    script_path = Rails.root.join('automation/run.js')
+    script_path = Rails.root.join('automation/run.js').to_s
     spec_name = ensure_spec_file_for_local_run!(test)
 
     puts "=== RUN LOCALLY (headed: #{headed}) ==="
     puts "Running Playwright locally with spec: #{spec_name}"
     $stdout.flush
+
+    if node_path.blank?
+      raise "Node not found in PATH"
+    end
 
     env_vars = {
       'PW_RETRIES'  => test_run.retries_on_failure.to_s,
@@ -101,14 +109,10 @@ class RunPlaywrightJob < ApplicationJob
       'ENVIRONMENT' => test_run.environment.to_s
     }
 
-    env_string = env_vars.map { |k, v| "#{k}=#{v}" }.join(' ')
-    command = "#{env_string} #{node_path} #{script_path} #{spec_name} 2>&1"
-
-    puts "Running command: #{command}"
+    puts "Running command: #{node_path} #{script_path} #{spec_name}"
     $stdout.flush
 
-    output = ""
-    IO.popen(command) { |io| io.each { |line| output << line } }
+    output, timed_out = run_playwright_command(env_vars, node_path, script_path, spec_name)
 
     if output =~ /---RESULT---(.*?)---END---/m
       result = JSON.parse($1)
@@ -120,7 +124,50 @@ class RunPlaywrightJob < ApplicationJob
       test_run.update!(status: "failed", finished_at: Time.current)
     end
 
+    Rails.logger.error("RunPlaywrightJob timeout for test_run=#{test_run.id}") if timed_out
+
     UploadArtifactsJob.perform_later(test_run.id)
+  end
+
+  def run_playwright_command(env_vars, node_path, script_path, spec_name)
+    output = +""
+    timed_out = false
+
+    Open3.popen2e(env_vars, node_path, script_path, spec_name, chdir: Rails.root.join('automation').to_s, pgroup: true) do |_stdin, stdout_and_stderr, wait_thr|
+      reader = Thread.new do
+        stdout_and_stderr.each do |line|
+          output << line
+          $stdout.write(line)
+          $stdout.flush
+        end
+      end
+
+      unless wait_thr.join(LOCAL_RUN_TIMEOUT_SECONDS)
+        timed_out = true
+        output << "\n---RESULT---\n"
+        output << {
+          runId: env_vars['TEST_RUN_ID'],
+          success: false,
+          exitCode: 124,
+          error: "Playwright execution timed out after #{LOCAL_RUN_TIMEOUT_SECONDS} seconds"
+        }.to_json
+        output << "\n---END---\n"
+
+        safely_terminate_process_group(wait_thr.pid)
+      end
+
+      reader.join
+    end
+
+    [output, timed_out]
+  end
+
+  def safely_terminate_process_group(pid)
+    Process.kill('TERM', -pid)
+    sleep 1
+    Process.kill('KILL', -pid)
+  rescue Errno::ESRCH, Errno::EPERM
+    nil
   end
 
   def resolved_spec_name_for(test)

@@ -1,7 +1,8 @@
 class Api::TestRunsController < ApplicationController
     
 def index
-  test = Test.find(params[:test_id])
+  test = Test.find_by(id: params[:test_id])
+  return render json: { error: 'Test not found' }, status: :not_found unless test
 
   runs = test.test_runs
              .order(created_at: :desc)
@@ -29,6 +30,9 @@ def index
         end
       }
     }
+rescue => e
+  Rails.logger.error("TestRunsController#index failed: #{e.message}")
+  render json: { error: 'Failed to fetch test runs' }, status: :internal_server_error
 end
 
   def show
@@ -50,6 +54,7 @@ end
     )
 
     RunPlaywrightJob.perform_later(test_run.id)
+    FinalizeStaleTestRunJob.set(wait: 20.minutes).perform_later(test_run.id)
 
     render json: {
       test_run_id: test_run.id,

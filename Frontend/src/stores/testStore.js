@@ -1,4 +1,3 @@
-// stores/testStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
@@ -10,6 +9,8 @@ export const useTestStore = defineStore('test', () => {
   const tests = ref([])
   const testRuns = ref([])
   const pollingInterval = ref(null)
+  const activePollingTestIds = ref([])
+  const terminalStatusCycles = ref({})
   const runEndTime = ref(null)
   const vncOpened = ref(false)
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
@@ -37,18 +38,25 @@ export const useTestStore = defineStore('test', () => {
         }
       }
     } catch (err) {
-      console.error("Failed to refresh tests:", err)
+      if (import.meta.env.DEV && err.response?.status && ![500].includes(err.response.status)) {
+        console.warn(`refreshTestsFromBackend failed: ${err.response?.status}`)
+      }
     }
   }
 
   async function fetchTestRuns(testId) {
   if (!testId) return
 
+  const selectedTestExists = tests.value.find(t => t.id === testId)
+  if (!selectedTestExists) return
+
   try {
     const res = await axios.get(`${API_BASE_URL}/api/tests/${testId}/test_runs`)
     testRuns.value = res.data
   } catch (err) {
-    console.error("Failed to fetch test runs:", err)
+    if (import.meta.env.DEV && err.response?.status && ![404, 500].includes(err.response.status)) {
+      console.warn(`fetchTestRuns test ${testId} failed:`, err.response?.status)
+    }
   }
 }
 
@@ -95,40 +103,71 @@ function addTest(newTest) {
   }
 
   function startPolling(testId) {
-    stopPolling()
+    if (!testId) return
+
+    if (!activePollingTestIds.value.includes(testId)) {
+      activePollingTestIds.value = [...activePollingTestIds.value, testId]
+    }
+
+    if (pollingInterval.value) return
+
     vncOpened.value = false
 
     pollingInterval.value = setInterval(async () => {
-      await refreshTestsFromBackend()
-      await fetchTestRuns(testId)
+      try {
+        await refreshTestsFromBackend()
 
-      const updatedTest = tests.value.find(t => t.id === testId)
-      if (!updatedTest) return
-      setSelectedTest(updatedTest)
+        if (selectedTest.value?.id) {
+          await fetchTestRuns(selectedTest.value.id)
+        }
 
-      // Auto-open VNC URL if available and not already opened
-      if (!vncOpened.value && updatedTest.vnc_url) {
-        vncOpened.value = true
-        window.open(updatedTest.vnc_url, '_blank')
-      }
+        const retainedIds = []
 
-      // Stop polling when passed
-      if (updatedTest.status === 'passed') {
-        stopPolling()
-        return
-      }
+        for (const id of activePollingTestIds.value) {
+          const updatedTest = tests.value.find(t => t.id === id)
+          if (!updatedTest) continue
 
-      // Stop polling when failed and trace artifact available
-      if (updatedTest.status === 'failed') {
-        const traceArtifact = updatedTest.artifacts?.find(
-          a => a.kind === 'trace'
-        )
-        if (traceArtifact && traceArtifact.url) {
+          if (selectedTest.value?.id === id) {
+            setSelectedTest(updatedTest)
+          }
+
+          // Auto-open VNC URL if available and not already opened
+          if (!vncOpened.value && updatedTest.vnc_url) {
+            vncOpened.value = true
+            window.open(updatedTest.vnc_url, '_blank')
+          }
+
+          const normalizedStatus = (updatedTest.status || '').toLowerCase()
+          const isTerminal = normalizedStatus === 'passed' || normalizedStatus === 'failed'
+
+          if (!isTerminal) {
+            terminalStatusCycles.value[id] = 0
+            retainedIds.push(id)
+            continue
+          }
+
+          // Keep polling terminal tests for a few cycles so delayed artifact uploads appear.
+          const nextCycles = (terminalStatusCycles.value[id] || 0) + 1
+          terminalStatusCycles.value[id] = nextCycles
+
+          if (nextCycles < 8) {
+            retainedIds.push(id)
+          } else {
+            delete terminalStatusCycles.value[id]
+          }
+        }
+
+        activePollingTestIds.value = retainedIds
+
+        if (activePollingTestIds.value.length === 0) {
           stopPolling()
-          return
+        }
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.warn('Polling error:', error.message)
         }
       }
-    }, 3000)
+    }, 2000)
   }
 
   function stopPolling() {
@@ -138,6 +177,9 @@ function addTest(newTest) {
       runEndTime.value = new Date()
       vncOpened.value = false
     }
+
+    activePollingTestIds.value = []
+    terminalStatusCycles.value = {}
   }
 
   

@@ -62,14 +62,8 @@ function runTests(testFile) {
 
     childProcess.on('close', (exitCode) => {
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-      
-      const artifactsDir = path.join(__dirname, 'artifacts');
-      const runs = fs.existsSync(artifactsDir) 
-        ? fs.readdirSync(artifactsDir).filter(dir => dir.startsWith('run-'))
-        : [];
-      
-      const latestRun = runs.length > 0 ? runs[runs.length - 1] : null;
-      const outputDir = latestRun ? path.join(artifactsDir, latestRun) : null;
+
+      const outputDir = path.join(__dirname, 'artifacts', `run-${testRunId}`);
 
       const result = {
         runId: testRunId,
@@ -84,7 +78,7 @@ function runTests(testFile) {
         retries: parseInt(retries)
       };
 
-      if (outputDir) {
+      if (fs.existsSync(outputDir)) {
         const jsonReport = path.join(outputDir, 'result.json');
         if (fs.existsSync(jsonReport)) {
           try {

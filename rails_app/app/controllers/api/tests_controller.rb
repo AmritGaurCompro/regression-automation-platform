@@ -5,17 +5,18 @@ class Api::TestsController < ApplicationController
     tests = Test.includes(test_runs: :artifacts)
 
     data = tests.map do |t|
-      last_run = t.test_runs.order(created_at: :desc).first
-      build_test_data(t, last_run)
+      build_test_data(t, dashboard_run_for(t))
     end
 
     render json: data
+  rescue => e
+    Rails.logger.error("TestsController#index failed: #{e.class} - #{e.message}")
+    render json: { error: "Failed to fetch tests" }, status: :internal_server_error
   end
 
   def show
     test     = Test.includes(test_runs: :artifacts).find(params[:id])
-    last_run = test.test_runs.order(created_at: :desc).first
-    render json: build_test_data(test, last_run)
+    render json: build_test_data(test, dashboard_run_for(test))
   end
 
   def script
@@ -29,6 +30,12 @@ class Api::TestsController < ApplicationController
   # Saves recorded script content to Render disk + DB
 
   private
+
+  def dashboard_run_for(test)
+    test.test_runs
+        .order(Arel.sql("CASE WHEN status = 'running' THEN 0 ELSE 1 END"), created_at: :desc)
+        .first
+  end
 
   def build_test_data(test, last_run)
     {
