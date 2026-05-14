@@ -18,10 +18,15 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins 'localhost:3001', 'localhost:3000', 'localhost:5173',
-             'https://regression-automation-platform.vercel.app',
-             'https://regression-automation-platform-git-qa-amritgaurcompros-projects.vercel.app',
-             /https:\/\/regression-automation-platform.*\.vercel\.app/
-    resource '*', headers: :any, methods: [:get, :post, :put, :patch, :delete]
+    origins 'http://localhost:3001',
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'https://regression-automation-platform.vercel.app',
+        'https://regression-automation-platform-git-qa-amritgaurcompros-projects.vercel.app',
+        /https:\/\/regression-automation-platform.*\.vercel\.app/
+    resource '*',
+      headers:     :any,
+      methods:     [:get, :post, :put, :patch, :delete, :options, :head],
+      credentials: true                 # ← required for cookies/auth headers cross-origin
   end
 end

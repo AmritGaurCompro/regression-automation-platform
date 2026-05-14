@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_03_25_113138) do
+ActiveRecord::Schema.define(version: 2026_05_13_094015) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -23,6 +23,20 @@ ActiveRecord::Schema.define(version: 2026_03_25_113138) do
     t.datetime "updated_at", precision: 6, null: false
     t.string "file_url"
     t.index ["test_run_id"], name: "index_artifacts_on_test_run_id"
+  end
+
+  create_table "jwt_denylists", force: :cascade do |t|
+    t.string "jti", null: false
+    t.datetime "exp", null: false
+    t.index ["jti"], name: "index_jwt_denylists_on_jti", unique: true
+  end
+
+  create_table "revoked_tokens", force: :cascade do |t|
+    t.string "jti"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "exp"
+    t.index ["jti"], name: "index_revoked_tokens_on_jti", unique: true
   end
 
   create_table "scripts", force: :cascade do |t|
@@ -57,11 +71,27 @@ ActiveRecord::Schema.define(version: 2026_03_25_113138) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.string "vnc_url"
+    t.bigint "user_id", null: false
     t.index ["script_id"], name: "index_tests_on_script_id"
+    t.index ["user_id"], name: "index_tests_on_user_id"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "email_id"
+    t.string "first_name"
+    t.string "last_name"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.string "encrypted_password", default: "", null: false
+    t.string "provider"
+    t.string "uid"
+    t.index ["email_id"], name: "index_users_on_email_id", unique: true
+    t.index ["provider", "uid"], name: "index_users_on_provider_and_uid", unique: true
   end
 
   add_foreign_key "artifacts", "test_runs"
   add_foreign_key "test_runs", "scripts"
   add_foreign_key "test_runs", "tests"
   add_foreign_key "tests", "scripts"
+  add_foreign_key "tests", "users"
 end

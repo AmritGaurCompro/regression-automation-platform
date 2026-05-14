@@ -1,29 +1,28 @@
 class Api::TestsController < ApplicationController
+  before_action :authenticate_user!
   SCRIPTS_DIR = Rails.root.join('automation', 'tests')
-
-  def index
-    tests = Test.includes(test_runs: :artifacts)
-
-    data = tests.map do |t|
-      last_run = t.test_runs.order(created_at: :desc).first
-      build_test_data(t, last_run)
-    end
-
-    render json: data
+def index
+  tests = current_user.tests.includes(test_runs: :artifacts)
+  data = tests.map do |t|
+    last_run = t.test_runs.order(created_at: :desc).first
+    build_test_data(t, last_run)
   end
+  render json: data
+end
+end
 
-  def show
-    test     = Test.includes(test_runs: :artifacts).find(params[:id])
-    last_run = test.test_runs.order(created_at: :desc).first
-    render json: build_test_data(test, last_run)
-  end
+def show
+  test     = current_user.tests.includes(test_runs: :artifacts).find(params[:id])
+  last_run = test.test_runs.order(created_at: :desc).first
+  render json: build_test_data(test, last_run)
+end
 
-  def script
-    test = Test.find(params[:id])
-    render json: { script: { raw: test.script.raw_content, normalized: test.script.normalized_content } }, status: :ok
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Test not found' }, status: :not_found
-  end
+def script
+  test = current_user.tests.find(params[:id])
+  render json: { script: { raw: test.script.raw_content, normalized: test.script.normalized_content } }, status: :ok
+rescue ActiveRecord::RecordNotFound
+  render json: { error: 'Test not found' }, status: :not_found
+end
 
   # Called by GitHub Actions after recording finishes (production flow)
   # Saves recorded script content to Render disk + DB
@@ -133,4 +132,3 @@ class Api::TestsController < ApplicationController
       "#{minutes}m #{seconds}s"
     end
   end
-end

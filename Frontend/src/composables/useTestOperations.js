@@ -1,7 +1,7 @@
 import { useTestStore } from '@/stores/testStore'
 import { useDateFormatter } from './useDateFormatter'
 import { storeToRefs } from 'pinia'
-import axios from 'axios'
+import axios from '@/plugins/axios'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 export function useTestOperations() {

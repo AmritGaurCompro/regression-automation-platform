@@ -11,7 +11,7 @@ import Button from './ui/button/Button.vue';
 import { Trash2 } from "lucide-vue-next"
 import Separator from './ui/separator/Separator.vue';
 import Input from './ui/input/Input.vue';
-import axios from 'axios';
+import axios from '@/plugins/axios.js';
 import { useTestStore } from '@/stores/testStore';
 
 const testStore = useTestStore()

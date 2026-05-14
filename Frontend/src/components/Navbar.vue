@@ -6,7 +6,6 @@ import {
   AvatarImage,
 } from '@/components/ui/avatar'
 
-
 import Input from './ui/input/Input.vue';
 import {  Search } from 'lucide-vue-next';
 import Button from './ui/button/Button.vue';
@@ -17,6 +16,7 @@ import { ref } from 'vue'
 import RecordTestModal from '@/components/RecordTestModal.vue'
 import ImportTestModal from './ImportTestModal.vue';
 
+const emit = defineEmits(['signout'])
 const testStore = useTestStore();
 const { searchQuery } = storeToRefs(testStore);
 const recordModalRef = ref(null)
@@ -46,6 +46,27 @@ const openImportModal=()=>{
   importModalRef.value?.show()
 }
 
+const downloadLocalSetup = () => {
+  const script = `#!/bin/bash
+# Local Setup Script for Playwright Regression Suite
+
+echo "Setting up local environment..."
+
+# Install dependencies
+npm install
+npx playwright install
+
+echo "Setup complete!"
+`
+  const blob = new Blob([script], { type: 'text/x-sh' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'local-setup.sh'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 </script>
 
 <template>
@@ -72,13 +93,14 @@ const openImportModal=()=>{
             </div>
 
             <div class="lg:mr-3">
-                <Button class="bg-red-500 m-3 px-3 py-5 rounded-md hover:bg-red-600 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white animate-pulse transition-all duration-200 ease-out
-    hover:-translate-y-0.5 focus-visible:-translate-y-0.5 " @click="openRecordModal">● Record New</Button>
-   
-                <RecordTestModal ref="recordModalRef" @test-created="onTestCreated" />
-                <Button class="px-3 py-5 rounded-md focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white hover:-
-}translate-y-0.5 focus-visible:-translate-y-0.5" @click="openImportModal">📥 Import</Button>
-                <ImportTestModal ref="importModalRef" />
+                <div class="lg:mr-3">
+    <Button class="px-3 py-5 rounded-md focus-visible:ring-0 bg-yellow-600 text-white hover:bg-yellow-700 hover:-translate-y-0.5 transition-all duration-200" @click="downloadLocalSetup">⚙️ Local Setup</Button>              
+    <Button class="bg-red-500 m-3 px-3 py-5 rounded-md hover:bg-red-600 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white animate-pulse transition-all duration-200 ease-out hover:-translate-y-0.5 focus-visible:-translate-y-0.5" @click="openRecordModal">● Record New</Button>
+    <RecordTestModal ref="recordModalRef" @test-created="onTestCreated" />
+    <Button class="px-3 py-5 rounded-md focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white hover:-translate-y-0.5 focus-visible:-translate-y-0.5" @click="openImportModal">📥 Import</Button>
+    <ImportTestModal ref="importModalRef" />
+    <Button class="ml-3 px-3 py-5 rounded-md focus-visible:ring-0 bg-[#1c2333] text-white hover:bg-[#2a3347] hover:-translate-y-0.5" @click="emit('signout')">🚪 Sign out</Button>
+</div>
             </div>
         </div>
      

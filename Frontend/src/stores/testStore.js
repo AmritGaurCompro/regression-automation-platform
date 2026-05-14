@@ -1,7 +1,7 @@
 // stores/testStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import axios from 'axios'
+import axios from '@/plugins/axios.js'
 
 
 export const useTestStore = defineStore('test', () => {
