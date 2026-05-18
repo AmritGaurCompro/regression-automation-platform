@@ -10,6 +10,7 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 
 function loginWithGoogle() {
+  console.log('API_URL:', API)
   window.location.href = `${API}/auth/google_oauth2`
 }
 </script>
