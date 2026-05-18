@@ -3,6 +3,7 @@ class Api::V1::OmniauthCallbacksController < ApplicationController
   skip_before_action :authenticate_user!
 
   def google_oauth2
+    Rails.logger.info "FRONTEND_URL: #{ENV['FRONTEND_URL']}"
     auth = request.env['omniauth.auth']
     user = User.from_omniauth(auth)
 
