@@ -6,10 +6,11 @@ import {
   AvatarImage,
 } from '@/components/ui/avatar'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
 
 
 function loginWithGoogle() {
+  console.log('API_BASE_URL:', API)
   console.log('API_URL:', API)
   window.location.href = `${API}/auth/google_oauth2`
 }
@@ -31,7 +32,7 @@ function loginWithGoogle() {
       <div class="particle particle-4"></div>
       <div class="particle particle-5"></div>
     </div>
-    <div class="flex w-full max-w-sm flex-col items-center gap-20 rounded-xl border border-border  bg-card p-10 shadow-2xl">
+    <div class="relative z-20 flex w-full max-w-sm flex-col items-center gap-20 rounded-xl border border-border  bg-card p-10 shadow-2xl">
 
       <div class="flex flex-col items-center gap-2 text-center">
         <Avatar class="ml-2 mt-1">
@@ -46,7 +47,7 @@ function loginWithGoogle() {
         <p class="text-center text-sm text-muted-foreground">Sign in to your account</p>
         <button
           @click="loginWithGoogle"
-          class="flex w-full items-center justify-center gap-6 rounded-md border border-border bg-background py-2.5 text-sm font-semibold text-foreground transition-all hover:bg-muted hover:border-primary"
+          class="relative z-10 flex w-full items-center justify-center gap-6 rounded-md border border-border bg-background py-2.5 text-sm font-semibold text-foreground transition-all hover:bg-muted hover:border-primary"
         >
           <svg class="h-4 w-4" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
