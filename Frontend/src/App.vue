@@ -6,7 +6,7 @@ import Navbar from './components/Navbar.vue'
 import Sidebar from './components/Sidebar.vue'
 import HeroContent from './components/HeroContent.vue'
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
 const route = useRoute()
 
 const user = ref(null)
