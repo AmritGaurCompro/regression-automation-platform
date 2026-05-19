@@ -65,5 +65,8 @@ async function handleSignout() {
         <HeroContent />
       </div>
     </div>
+    <footer class="mb-4 text-center text-xs text-white/60">
+      © 2026 The Gladiators ⚔️
+    </footer>
   </template>
 </template>
