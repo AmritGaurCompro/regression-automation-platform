@@ -60,16 +60,14 @@ function runTests(testFile) {
       process.stderr.write(data);
     });
 
-    childProcess.on('close', (exitCode) => {
+   childProcess.on('close', (exitCode) => {
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
       
       const artifactsDir = path.join(__dirname, 'artifacts');
-      const runs = fs.existsSync(artifactsDir) 
-        ? fs.readdirSync(artifactsDir).filter(dir => dir.startsWith('run-'))
-        : [];
-      
-      const latestRun = runs.length > 0 ? runs[runs.length - 1] : null;
-      const outputDir = latestRun ? path.join(artifactsDir, latestRun) : null;
+      const attempt = process.env.RUN_ATTEMPT || 'default' // ↓ ADDED
+
+      // ↓ CHANGED: use testRunId + attempt directly instead of scanning for latest
+      const outputDir = path.join(artifactsDir, `run-${testRunId}`, `attempt-${attempt}`)
 
       const result = {
         runId: testRunId,

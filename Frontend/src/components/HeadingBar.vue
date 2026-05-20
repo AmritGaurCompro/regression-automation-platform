@@ -6,7 +6,7 @@
   >
     <div>
       <h1 class="text-xl font-bold text-white">
-        {{ title }}
+        {{ title?.split('_').slice(0, -1).join('_') || title }}
       </h1>
 
       <div class="mt-1 flex items-center text-sm text-slate-400">

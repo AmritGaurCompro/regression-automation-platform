@@ -57,12 +57,7 @@ const artifactIcon = (kind) => {
         <CardTitle class="flex items-center gap-2 text-white">
           📅 Run History
         </CardTitle>
-        <Button
-          variant="outline"
-          class="border-slate-700 text-slate-300 focus-visible:outline-none focus-visible:ring-white"
-        >
-          View All
-        </Button>
+
       </CardHeader>
 
       <CardContent class="p-0">

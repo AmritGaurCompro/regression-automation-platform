@@ -267,9 +267,9 @@ echo "✅ Setup complete! Your recorded script is on the Desktop."
 
           <div class="flex gap-2 flex-wrap lg:flex-nowrap items-center">
             <Button class="px-3 py-5 rounded-md focus-visible:ring-0 bg-yellow-600 text-white hover:bg-yellow-700 hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap" @click="downloadLocalSetup">⚙️ Local Setup</Button>              
-            <Button class="bg-red-500 px-3 py-5 rounded-md hover:bg-red-600 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white animate-pulse transition-all duration-200 ease-out hover:-translate-y-0.5 focus-visible:-translate-y-0.5 whitespace-nowrap" @click="openRecordModal">● Record New</Button>
+            <!-- <Button class="bg-red-500 px-3 py-5 rounded-md hover:bg-red-600 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white animate-pulse transition-all duration-200 ease-out hover:-translate-y-0.5 focus-visible:-translate-y-0.5 whitespace-nowrap" @click="openRecordModal">● Record New</Button> -->
             <RecordTestModal ref="recordModalRef" @test-created="onTestCreated" />
-            <Button class="px-3 py-5 rounded-md focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white hover:-translate-y-0.5 focus-visible:-translate-y-0.5" @click="openImportModal">📥 Import</Button>
+            <Button class="px-3 py-5 rounded-md focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white  hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white animate-pulse transition-all duration-200 ease-out hover:-translate-y-0.5 focus-visible:-translate-y-0.5 whitespace-nowrap" " @click="openImportModal">📥 Import</Button>
             <ImportTestModal ref="importModalRef" />
             <Button class="ml-3 px-3 py-5 rounded-md focus-visible:ring-0 bg-[#1c2333] text-white hover:bg-[#2a3347] hover:-translate-y-0.5" @click="emit('signout')">🚪 Sign out</Button>
           </div>

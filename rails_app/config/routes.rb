@@ -13,6 +13,7 @@ Rails.application.routes.draw do
         post 'script_content'
       end
     end
+    get 'test_runs/any_running', to: 'test_runs#any_running'
     resources :import_tests, only: [:create]
     resources :tests do
       get  'script',  to: 'tests#script',        on: :member

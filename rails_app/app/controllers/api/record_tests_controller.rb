@@ -15,10 +15,15 @@ class Api::RecordTestsController < ApplicationController
       language:           'javascript'
     )
     test = Test.create!(title: test_title, script: script, user: current_user)
+    new_file_name = "#{test_title}_#{test.id}.spec.js"
+    new_file_path = tests_dir.join(new_file_name)
+    File.rename(file_path, new_file_path) if File.exist?(file_path)
+    test.update!(title: "#{test_title}_#{test.id}")
+    script.update!(name: new_file_name)
     if Rails.env.production?
-      trigger_github_actions(test, script, file_name)
+      trigger_github_actions(test, script, new_file_name)
     else
-      run_locally(test, script, file_name, file_path)
+      run_locally(test, script, new_file_name, new_file_path)
     end
   rescue => e
     render json: { error: e.message }, status: :internal_server_error

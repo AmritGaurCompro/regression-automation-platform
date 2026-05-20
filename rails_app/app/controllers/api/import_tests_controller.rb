@@ -31,6 +31,11 @@ class Api::ImportTestsController < ApplicationController
         language:           'javascript'
       )
       test = Test.create!(title: title, script: script, user: current_user)
+      new_file_name = "#{title}_#{test.id}.spec.js"
+      new_file_path = tests_dir.join(new_file_name)
+      File.rename(file_path, new_file_path)
+      test.update!(title: "#{title}_#{test.id}")
+      script.update!(name: new_file_name)
     end
     render json: {
       test:   { id: test.id,   title: test.title },

@@ -42,22 +42,30 @@ export function useTestOperations() {
     const { id, title } = selectedTest
     if (!id || !title) return
 
-    
+    // ↓ ADDED: optimistically disable run buttons immediately
+    testStore.isAnyRunning = true
 
-    const res = await axios.post(
-      `${API_BASE_URL}/api/tests/${selectedTest.id}/test_runs`,
-      {
-        environment: selectedTest.environment,
-        runner_mode: testRunConfig.value.runner_mode,
-        retries_on_failure: testRunConfig.value.retries,
-        tags: selectedTest.tags
+    try {
+      const res = await axios.post(
+        `${API_BASE_URL}/api/tests/${selectedTest.id}/test_runs`,
+        {
+          environment: selectedTest.environment,
+          runner_mode: testRunConfig.value.runner_mode,
+          retries_on_failure: testRunConfig.value.retries,
+          tags: selectedTest.tags
+        }
+      ) 
+        testStore.startPolling(selectedTest.id)
+        selectedTest.lastRun = getCurrentTimestamp()
+        
+        await testStore.fetchTestRuns(selectedTest.id)
+    } catch (err) {
+      // ↓ ADDED: re-enable if request failed
+      testStore.isAnyRunning = false
+      if (err.response?.status === 409) {
+        alert('A test run is already in progress. Please wait.')
       }
-    ) 
-      testStore.startPolling(selectedTest.id)
-      selectedTest.lastRun = getCurrentTimestamp()
-      
-      await testStore.fetchTestRuns(selectedTest.id)
-       
+    }
   }
 
   return {
@@ -65,6 +73,3 @@ export function useTestOperations() {
     runSelectedTest
   }
 }
-
-
-

@@ -10,10 +10,12 @@ import {
 import { Button } from './ui/button';
 import Badge from './ui/badge/Badge.vue';
 import { useDateFormatter } from '@/composables/useDateFormatter';
+import { computed } from 'vue' // ↓ ADDED
+import { useTestStore } from '@/stores/testStore' // ↓ ADDED
+import { storeToRefs } from 'pinia' // ↓ ADDED
 
 
-
-defineProps({
+const props = defineProps({  // ↓ CHANGED: added props = to access in computed
     tests:{
         type: Object,
         required: true
@@ -22,6 +24,13 @@ defineProps({
 const emit = defineEmits(['action'])
 
 const { formatDateTime } = useDateFormatter()
+
+// ↓ ADDED
+const { queuedRuns } = storeToRefs(useTestStore())
+const queuePosition = computed(() => {
+  const pos = queuedRuns.value.indexOf(props.tests.id)
+  return pos !== -1 ? pos + 1 : null
+})
 
 </script>
 
@@ -39,8 +48,7 @@ const { formatDateTime } = useDateFormatter()
         </div>
 
         <div class="flex flex-col gap-3 ">
-          <p class="text-wrap ">{{  tests?.title }}</p>
-          <p class="text-xs font-normal">🌐 {{ tests?.environment }}</p>
+          <p class="text-wrap">{{ tests?.title?.split('_').slice(0, -1).join('_') || tests?.title }}</p>          <p class="text-xs font-normal">🌐 {{ tests?.environment }}</p>
         </div>
 
         <p class="text-slate-500 text-xs font-semibold text-wrap" v-if="tests?.lastRun!=null" >{{ formatDateTime(new Date(tests.lastRun)) }}</p>
@@ -55,9 +63,13 @@ const { formatDateTime } = useDateFormatter()
 
     <CardFooter class="flex justify-center gap-3">
       <Button size="sm" class="bg-black opacity-75  hover:bg-transparent hover:border-2 hover:border-gray-700 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white" >View</Button>
-      <Button size="sm" class="bg-black opacity-75  hover:bg-transparent hover:border-2 hover:border-gray-700 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white" @click.stop="emit('action')">▶ Run</Button>
+      <!-- ↓ CHANGED: added queue/running label, rest is same -->
+      <Button size="sm" class="bg-black opacity-75  hover:bg-transparent hover:border-2 hover:border-gray-700 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white" @click.stop="emit('action')">
+        <span v-if="tests?.status === 'running'" class="animate-pulse">⏳ Running...</span>
+        <span v-else-if="queuePosition" class="animate-pulse">🕐 Queue #{{ queuePosition }}</span>
+        <span v-else>▶ Run</span>
+      </Button>
     </CardFooter>
     
   </Card>
 </template>
-

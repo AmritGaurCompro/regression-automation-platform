@@ -14,7 +14,8 @@ export const useTestStore = defineStore('test', () => {
   const vncOpened = ref(false)
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
   const resetNormalization = ref(false)
-
+  const isAnyRunning = ref(false)
+  const queuedRuns = ref([])
 
   // Test run configuration - shared between Sidebar and TestData
   const testRunConfig = ref({
@@ -24,14 +25,22 @@ export const useTestStore = defineStore('test', () => {
 
   async function refreshTestsFromBackend() {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/tests`)
-      tests.value = res.data
+      // ↓ CHANGED: parallel fetch tests + any_running
+      const [testsRes, runningRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/api/tests`),
+        axios.get(`${API_BASE_URL}/api/test_runs/any_running`)
+      ])
 
-      console.log('script field from API:', res.data[0]?.script)
-      console.log('type:', typeof res.data[0]?.script)
+      tests.value = testsRes.data
+      // ↓ ADDED: update global running/queued state
+      isAnyRunning.value = runningRes.data.running
+      queuedRuns.value = runningRes.data.queued
+
+      console.log('script field from API:', testsRes.data[0]?.script)
+      console.log('type:', typeof testsRes.data[0]?.script)
 
       if (selectedTest.value) {
-        const updated = res.data.find(t => t.id === selectedTest.value.id)
+        const updated = testsRes.data.find(t => t.id === selectedTest.value.id)
         if (updated) {
           selectedTest.value = updated
         }
@@ -140,8 +149,6 @@ function addTest(newTest) {
     }
   }
 
-  
-
   return {
     tests,
     selectedTest,
@@ -149,10 +156,10 @@ function addTest(newTest) {
     runEndTime,
     testRunConfig,
     testRuns,
-
     resetNormalization,
-
     vncOpened,
+    isAnyRunning,   // ↓ ADDED
+    queuedRuns,     // ↓ ADDED
     refreshTestsFromBackend,
     fetchTestRuns,
     addTest,
@@ -165,6 +172,3 @@ function addTest(newTest) {
     stopPolling
   }
 })
-
-
-

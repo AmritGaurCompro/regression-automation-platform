@@ -1,10 +1,11 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import LoginDashboard from './components/LoginDashboard.vue'
 import Navbar from './components/Navbar.vue'
 import Sidebar from './components/Sidebar.vue'
 import HeroContent from './components/HeroContent.vue'
+import { useTestStore } from '@/stores/testStore'
 
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
 const route = useRoute()
@@ -12,26 +13,48 @@ const route = useRoute()
 const user = ref(null)
 const loading = ref(true)
 
+const testStore = useTestStore()
+let backgroundInterval = null
+
+function startBackgroundPolling() {
+  testStore.refreshTestsFromBackend()
+  backgroundInterval = setInterval(() => {
+    testStore.refreshTestsFromBackend()
+  }, 3000)
+}
+
+function stopBackgroundPolling() {
+  clearInterval(backgroundInterval)
+  backgroundInterval = null
+}
+
 onMounted(async () => {
   try {
     const res = await fetch(`${API}/api/v1/me`, {
-      credentials: 'include'  // ← send cookie with fetch too
+      credentials: 'include'
     })
     if (res.ok) {
       user.value = await res.json()
+      startBackgroundPolling() // ← only starts when logged in
     }
   } catch {
-    // not logged in
+    console.log('Not authenticated Sarthak')
   } finally {
     loading.value = false
   }
 })
 
+onUnmounted(() => {
+  stopBackgroundPolling()
+})
+
 function handleLogin(userData) {
   user.value = userData
+  startBackgroundPolling() // ← restart polling after login
 }
 
 async function handleSignout() {
+  stopBackgroundPolling() // ← stop polling on signout
   await fetch(`${API}/api/v1/sign_out`, {
     method: 'DELETE',
     credentials: 'include'

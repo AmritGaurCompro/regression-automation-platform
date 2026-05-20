@@ -7,13 +7,18 @@ class UploadArtifactsJob < ApplicationJob
 
     return unless Dir.exist?(artifacts_root)
 
-    latest_folder = Dir.children(artifacts_root)
-                       .map { |f| [f, File.mtime(File.join(artifacts_root, f))] }
-                       .max_by(&:last)&.first
+    # ↓ CHANGED: find the run-{test_run_id} folder directly
+    run_folder = File.join(artifacts_root, "run-#{test_run_id}")
+    return unless Dir.exist?(run_folder)
 
-    return unless latest_folder
+    # ↓ CHANGED: find the attempt subfolder inside run folder
+    attempt_folder = Dir.children(run_folder)
+                        .map { |f| [f, File.mtime(File.join(run_folder, f))] }
+                        .max_by(&:last)&.first
 
-    result_json_path = File.join(artifacts_root, latest_folder, "result.json")
+    return unless attempt_folder
+
+    result_json_path = File.join(run_folder, attempt_folder, "result.json")
     return unless File.exist?(result_json_path)
 
     data = JSON.parse(File.read(result_json_path))
@@ -52,13 +57,14 @@ class UploadArtifactsJob < ApplicationJob
     Rails.logger.error("UploadArtifactsJob failed: #{e.message}")
 
   ensure
-    cleanup_artifacts_folder
+    # ↓ CHANGED: only delete THIS run's folder, not the entire artifacts dir
+    cleanup_run_folder(test_run_id)
   end
 
   private
 
-  def cleanup_artifacts_folder
-    artifacts_root = Rails.root.join("automation/artifacts")
-    FileUtils.rm_rf(artifacts_root) if Dir.exist?(artifacts_root)
+  def cleanup_run_folder(test_run_id)
+    run_folder = Rails.root.join("automation/artifacts/run-#{test_run_id}")
+    FileUtils.rm_rf(run_folder) if Dir.exist?(run_folder)
   end
 end

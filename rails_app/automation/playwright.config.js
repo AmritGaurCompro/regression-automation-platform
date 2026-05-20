@@ -1,7 +1,7 @@
 const { defineConfig, devices } = require('@playwright/test');
-
 const retries = Number(process.env.PW_RETRIES);
 const runId = process.env.TEST_RUN_ID || new Date().toISOString().replace(/[:.]/g, '-');
+const attempt = process.env.RUN_ATTEMPT || Date.now().toString() // ↓ ADDED
 
 module.exports = defineConfig({
   testDir: './tests',
@@ -11,7 +11,7 @@ module.exports = defineConfig({
   retries: Number.isNaN(retries) ? 2 : retries,
   timeout: 120000,
   globalTimeout: 300000,
-  outputDir: `artifacts/run-${runId}`,
+  outputDir: `artifacts/run-${runId}/attempt-${attempt}`, 
   use: {
     headless: true,
     launchOptions: {
@@ -27,7 +27,7 @@ module.exports = defineConfig({
   },
   reporter: [
     ['html'],
-    ['json', { outputFile: `artifacts/run-${runId}/result.json` }]
+    ['json', { outputFile: `artifacts/run-${runId}/attempt-${attempt}/result.json` }] // ↓ CHANGED
   ],
   projects: [
     {

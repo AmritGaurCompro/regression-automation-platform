@@ -44,12 +44,12 @@ end
       environment: params[:environment] || "QA",
       runner_mode: params[:runner_mode] || "headless",
       retries_on_failure: params[:retries_on_failure] || 0,
-      status: "running",
       started_at: Time.current,
-      tags: params[:tags] || "default"
-    )
+      tags: params[:tags] || "default",
+      status: TestRun.exists?(status: 'running') ? 'queued' : 'running'
+ )
 
-    RunPlaywrightJob.perform_later(test_run.id)
+    RunPlaywrightJob.perform_later(test_run.id) unless test_run.queued?
 
     render json: {
       test_run_id: test_run.id,
@@ -57,6 +57,13 @@ end
     }, status: :created
   end
   
+  def any_running
+  render json: {
+    running: TestRun.exists?(status: 'running'),
+    queued: TestRun.where(status: 'queued').order(created_at: :asc).pluck(:test_id)
+  }
+end  
+
   def calculate_duration(test_run)
     return nil unless test_run&.created_at && test_run&.updated_at
 
@@ -105,6 +112,11 @@ end
     status: params[:success] ? 'passed' : 'failed',
     finished_at: Time.current
   )
+   next_run = TestRun.where(status: 'queued').order(created_at: :asc).first
+  if next_run
+    next_run.update!(status: 'running', started_at: Time.current)
+    RunPlaywrightJob.perform_later(next_run.id)
+  end
 
   render json: { success: true }
 rescue => e

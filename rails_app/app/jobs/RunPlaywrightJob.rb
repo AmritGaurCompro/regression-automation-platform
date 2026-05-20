@@ -21,6 +21,15 @@ class RunPlaywrightJob < ApplicationJob
 
   private
 
+  # ↓ ADDED: extract queue trigger to reusable method
+  def trigger_next_queued_run
+    next_run = TestRun.where(status: 'queued').order(created_at: :asc).first
+    if next_run
+      next_run.update!(status: 'running', started_at: Time.current)
+      RunPlaywrightJob.perform_later(next_run.id)
+    end
+  end
+
   def runner_mode_context(test_run)
     if test_run.runner_mode == 'headed'
       ENV['LOCAL_HEADED_OVERRIDE'] == 'true' ? :local_headed : :github_headed
@@ -74,6 +83,7 @@ class RunPlaywrightJob < ApplicationJob
         puts "GitHub Actions trigger failed: #{response.body}"
         $stdout.flush
         test_run.update!(status: "failed", finished_at: Time.current)
+        trigger_next_queued_run # ↓ ADDED
       end
     rescue => e
       puts "=== HTTPARTY ERROR ==="
@@ -81,6 +91,7 @@ class RunPlaywrightJob < ApplicationJob
       puts e.backtrace.join("\n")
       $stdout.flush
       test_run.update!(status: "failed", finished_at: Time.current)
+      trigger_next_queued_run # ↓ ADDED
     end
   end
 
@@ -98,7 +109,8 @@ class RunPlaywrightJob < ApplicationJob
       'PW_RETRIES'  => test_run.retries_on_failure.to_s,
       'PW_HEADED'   => headed ? 'true' : 'false',
       'TEST_RUN_ID' => test_run.id.to_s,
-      'ENVIRONMENT' => test_run.environment.to_s
+      'ENVIRONMENT' => test_run.environment.to_s,
+      'RUN_ATTEMPT'  => Time.current.to_i.to_s
     }
 
     env_string = env_vars.map { |k, v| "#{k}=#{v}" }.join(' ')
@@ -121,6 +133,7 @@ class RunPlaywrightJob < ApplicationJob
     end
 
     UploadArtifactsJob.perform_later(test_run.id)
+    trigger_next_queued_run # ↓ ADDED
   end
 
   def resolved_spec_name_for(test)

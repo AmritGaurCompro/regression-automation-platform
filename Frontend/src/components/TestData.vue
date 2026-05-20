@@ -33,7 +33,7 @@
         @change="testStore.updateTestRunConfig({ runner_mode: $event.target.value })"
       >
         <option value="headless">Headless (default)</option>
-        <option value="headed">Headed</option>
+        <!-- <option value="headed">Headed</option> -->
       </select>
     </div>
 

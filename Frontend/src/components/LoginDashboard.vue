@@ -19,12 +19,12 @@ function loginWithGoogle() {
 <template>
     <div class="relative flex min-h-screen w-full flex-col items-center justify-center bg-[#7c3aed] px-4 overflow-hidden">
     
-    <!-- Animated blobs -->
+
     <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob"></div>
     <div class="absolute top-[20%] right-[-10%] w-96 h-96 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-2000"></div>
     <div class="absolute bottom-[-10%] left-[30%] w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-4000"></div>
 
-    <!-- Floating particles -->
+    
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
       <div class="particle particle-1"></div>
       <div class="particle particle-2"></div>
