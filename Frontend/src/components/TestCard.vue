@@ -10,12 +10,12 @@ import {
 import { Button } from './ui/button';
 import Badge from './ui/badge/Badge.vue';
 import { useDateFormatter } from '@/composables/useDateFormatter';
-import { computed } from 'vue' // ↓ ADDED
-import { useTestStore } from '@/stores/testStore' // ↓ ADDED
-import { storeToRefs } from 'pinia' // ↓ ADDED
+import { computed } from 'vue'
+import { useTestStore } from '@/stores/testStore'
+import { storeToRefs } from 'pinia'
 
 
-const props = defineProps({  // ↓ CHANGED: added props = to access in computed
+const props = defineProps({
     tests:{
         type: Object,
         required: true
@@ -25,8 +25,14 @@ const emit = defineEmits(['action'])
 
 const { formatDateTime } = useDateFormatter()
 
-// ↓ ADDED
 const { queuedRuns } = storeToRefs(useTestStore())
+
+// ↓ ADDED: check if this specific test is busy
+const isThisTestBusy = computed(() => {
+  return props.tests?.status === 'running' ||
+         queuedRuns.value.includes(props.tests?.id)
+})
+
 const queuePosition = computed(() => {
   const pos = queuedRuns.value.indexOf(props.tests.id)
   return pos !== -1 ? pos + 1 : null
@@ -63,8 +69,13 @@ const queuePosition = computed(() => {
 
     <CardFooter class="flex justify-center gap-3">
       <Button size="sm" class="bg-black opacity-75  hover:bg-transparent hover:border-2 hover:border-gray-700 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white" >View</Button>
-      <!-- ↓ CHANGED: added queue/running label, rest is same -->
-      <Button size="sm" class="bg-black opacity-75  hover:bg-transparent hover:border-2 hover:border-gray-700 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white" @click.stop="emit('action')">
+      <!-- ↓ CHANGED: added isThisTestBusy disable -->
+      <Button
+        size="sm"
+        :disabled="isThisTestBusy"
+        class="bg-black opacity-75  hover:bg-transparent hover:border-2 hover:border-gray-700 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white disabled:opacity-40 disabled:cursor-not-allowed"
+        @click.stop="emit('action')"
+      >
         <span v-if="tests?.status === 'running'" class="animate-pulse">⏳ Running...</span>
         <span v-else-if="queuePosition" class="animate-pulse">🕐 Queue #{{ queuePosition }}</span>
         <span v-else>▶ Run</span>

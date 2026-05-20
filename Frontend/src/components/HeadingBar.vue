@@ -25,20 +25,26 @@
 
     <div class="flex items-center gap-3">
       <button
+        :disabled="isThisTestBusy"
         class="rounded-md border px-4 py-2 text-sm
-               bg-[#10b981] text-black hover:opacity-90"
+               bg-[#10b981] text-black hover:opacity-90
+               disabled:opacity-40 disabled:cursor-not-allowed"
         @click="runTest"
       >
-        ▶ Run Test
+        <span v-if="isThisTestBusy" class="animate-pulse">⏳ Running...</span>
+        <span v-else>▶ Run Test</span>
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'                      // ↓ ADDED
+import { useTestStore } from '@/stores/testStore'   // ↓ ADDED
+import { storeToRefs } from 'pinia'                 // ↓ ADDED
 import { useTestOperations } from '@/composables/useTestOperations'
 
-defineProps({
+const props = defineProps({
   title: String,
   tags: Array,
   environment: String
@@ -46,6 +52,12 @@ defineProps({
 
 const { runSelectedTest: runTest } = useTestOperations()
 
+// ↓ ADDED
+const { queuedRuns } = storeToRefs(useTestStore())
+const { selectedTest } = storeToRefs(useTestStore())
+
+const isThisTestBusy = computed(() => {
+  return selectedTest.value?.status === 'running' ||
+         queuedRuns.value.includes(selectedTest.value?.id)
+})
 </script>
-
-
