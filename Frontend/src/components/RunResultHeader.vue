@@ -22,7 +22,7 @@ defineProps({
       <p class="text-sm text-slate-400 mt-1">
         Results for:
         <span class="text-slate-300">
-          {{ title }}
+          {{title?.split('_').slice(0, -1).join('_') || title}}
         </span>
       </p>
     </div>

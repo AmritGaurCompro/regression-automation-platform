@@ -3,11 +3,11 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from '@/plugins/axios.js'
 
-
 export const useTestStore = defineStore('test', () => {
   const selectedTest = ref(null)
   const searchQuery = ref('')
   const tests = ref([])
+  const features = ref([])  // ← new
   const testRuns = ref([])
   const pollingInterval = ref(null)
   const runEndTime = ref(null)
@@ -17,7 +17,6 @@ export const useTestStore = defineStore('test', () => {
   const isAnyRunning = ref(false)
   const queuedRuns = ref([])
 
-  // Test run configuration - shared between Sidebar and TestData
   const testRunConfig = ref({
     runner_mode: 'headless',
     retries: 2
@@ -25,19 +24,14 @@ export const useTestStore = defineStore('test', () => {
 
   async function refreshTestsFromBackend() {
     try {
-      // ↓ CHANGED: parallel fetch tests + any_running
       const [testsRes, runningRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/api/tests`),
         axios.get(`${API_BASE_URL}/api/test_runs/any_running`)
       ])
 
       tests.value = testsRes.data
-      // ↓ ADDED: update global running/queued state
       isAnyRunning.value = runningRes.data.running
       queuedRuns.value = runningRes.data.queued
-
-      console.log('script field from API:', testsRes.data[0]?.script)
-      console.log('type:', typeof testsRes.data[0]?.script)
 
       if (selectedTest.value) {
         const updated = testsRes.data.find(t => t.id === selectedTest.value.id)
@@ -50,19 +44,63 @@ export const useTestStore = defineStore('test', () => {
     }
   }
 
-  async function fetchTestRuns(testId) {
-  if (!testId) return
-
-  try {
-    const res = await axios.get(`${API_BASE_URL}/api/tests/${testId}/test_runs`)
-    testRuns.value = res.data
-  } catch (err) {
-    console.error("Failed to fetch test runs:", err)
+  // ← new
+  async function refreshFeaturesFromBackend() {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/features`)
+      features.value = res.data
+    } catch (err) {
+      console.error("Failed to refresh features:", err)
+    }
   }
-}
 
+  // ← new
+  async function runFeature(featureId, config = {}) {
+    try {
+      const res = await axios.post(`${API_BASE_URL}/api/features/${featureId}/run_all`, {
+        environment:        config.environment || 'QA',
+        runner_mode:        config.runner_mode || 'headless',
+        retries_on_failure: config.retries || 0
+      })
+      return res.data
+    } catch (err) {
+      console.error("Failed to run feature:", err)
+      throw err
+    }
+  }
 
-function addTest(newTest) {
+  // ← new
+  async function deleteFeature(featureId) {
+    try {
+      await axios.delete(`${API_BASE_URL}/api/features/${featureId}`)
+      features.value = features.value.filter(f => f.id !== featureId)
+    } catch (err) {
+      console.error("Failed to delete feature:", err)
+      throw err
+    }
+  }
+
+  async function deleteTest(testId) {
+    try {
+      await axios.delete(`${API_BASE_URL}/api/tests/${testId}`)
+      tests.value = tests.value.filter(t => t.id !== testId)
+    } catch (err) {
+      console.error("Failed to delete test:", err)
+      throw err
+    }
+  }
+
+  async function fetchTestRuns(testId) {
+    if (!testId) return
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/tests/${testId}/test_runs`)
+      testRuns.value = res.data
+    } catch (err) {
+      console.error("Failed to fetch test runs:", err)
+    }
+  }
+
+  function addTest(newTest) {
     const exists = tests.value.find(t => t.id === newTest.id)
     if (!exists) {
       tests.value.push({
@@ -84,7 +122,6 @@ function addTest(newTest) {
   function setSelectedTest(test) {
     resetNormalization.value = false
     selectedTest.value = test
-
   }
 
   function updateTestRunConfig(config) {
@@ -109,29 +146,25 @@ function addTest(newTest) {
 
     pollingInterval.value = setInterval(async () => {
       await refreshTestsFromBackend()
+      await refreshFeaturesFromBackend()  // ← new: keep features in sync
       await fetchTestRuns(testId)
 
       const updatedTest = tests.value.find(t => t.id === testId)
       if (!updatedTest) return
       setSelectedTest(updatedTest)
 
-      // Auto-open VNC URL if available and not already opened
       if (!vncOpened.value && updatedTest.vnc_url) {
         vncOpened.value = true
         window.open(updatedTest.vnc_url, '_blank')
       }
 
-      // Stop polling when passed
       if (updatedTest.status === 'passed') {
         stopPolling()
         return
       }
 
-      // Stop polling when failed and trace artifact available
       if (updatedTest.status === 'failed') {
-        const traceArtifact = updatedTest.artifacts?.find(
-          a => a.kind === 'trace'
-        )
+        const traceArtifact = updatedTest.artifacts?.find(a => a.kind === 'trace')
         if (traceArtifact && traceArtifact.url) {
           stopPolling()
           return
@@ -151,6 +184,7 @@ function addTest(newTest) {
 
   return {
     tests,
+    features,          // ← new
     selectedTest,
     searchQuery,
     runEndTime,
@@ -158,9 +192,13 @@ function addTest(newTest) {
     testRuns,
     resetNormalization,
     vncOpened,
-    isAnyRunning,   // ↓ ADDED
-    queuedRuns,     // ↓ ADDED
+    isAnyRunning,
+    queuedRuns,
     refreshTestsFromBackend,
+    refreshFeaturesFromBackend,  // ← new
+    runFeature,                  // ← new
+    deleteFeature,               // ← new
+    deleteTest,                  // ← new
     fetchTestRuns,
     addTest,
     setSelectedTest,

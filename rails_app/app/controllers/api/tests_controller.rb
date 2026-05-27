@@ -1,31 +1,36 @@
 class Api::TestsController < ApplicationController
   before_action :authenticate_user!
   SCRIPTS_DIR = Rails.root.join('automation', 'tests')
-def index
-  tests = current_user.tests.includes(test_runs: :artifacts)
-  data = tests.map do |t|
-    last_run = t.test_runs.order(created_at: :desc).first
-    build_test_data(t, last_run)
+
+  def index
+    tests = current_user.tests.includes(test_runs: :artifacts)
+    data = tests.map do |t|
+      last_run = t.test_runs.order(created_at: :desc).first
+      build_test_data(t, last_run)
+    end
+    render json: data
   end
-  render json: data
-end
-end
 
-def show
-  test     = current_user.tests.includes(test_runs: :artifacts).find(params[:id])
-  last_run = test.test_runs.order(created_at: :desc).first
-  render json: build_test_data(test, last_run)
-end
+  def show
+    test     = current_user.tests.includes(test_runs: :artifacts).find(params[:id])
+    last_run = test.test_runs.order(created_at: :desc).first
+    render json: build_test_data(test, last_run)
+  end
 
-def script
-  test = current_user.tests.find(params[:id])
-  render json: { script: { raw: test.script.raw_content, normalized: test.script.normalized_content } }, status: :ok
-rescue ActiveRecord::RecordNotFound
-  render json: { error: 'Test not found' }, status: :not_found
-end
+  def script
+    test = current_user.tests.find(params[:id])
+    render json: { script: { raw: test.script.raw_content, normalized: test.script.normalized_content } }, status: :ok
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Test not found' }, status: :not_found
+  end
 
-  # Called by GitHub Actions after recording finishes (production flow)
-  # Saves recorded script content to Render disk + DB
+  def destroy
+    test = current_user.tests.find(params[:id])
+    test.destroy
+    render json: { message: 'Test deleted' }, status: :ok
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Test not found' }, status: :not_found
+  end
 
   private
 
@@ -54,12 +59,9 @@ end
 
   def load_script_content(script_id)
     return { raw: nil, normalized: nil } if script_id.blank?
-
     script = Script.find_by(id: script_id)
     return { raw: nil, normalized: nil } unless script
-
     normalized = normalize_script(script.raw_content, script_id)
-
     { raw: script.raw_content, normalized: normalized }
   rescue StandardError => e
     Rails.logger.error("Error loading script #{script_id}: #{e.message}")
@@ -68,20 +70,14 @@ end
 
   def normalize_script(raw, script_id = nil)
     return nil if raw.blank?
-
     lines = raw.lines
     lines = lines.reject { |l| l.strip.start_with?('import ') }
     lines = lines.reject { |l| l.strip.start_with?("test('") || l.strip == '});' }
     lines = lines.drop_while { |l| l.strip.empty? }
     lines = lines.reverse.drop_while { |l| l.strip.empty? }.reverse
     lines = lines.map { |l| l.start_with?('  ') ? l[2..] : l }
-
     normalized = lines.join
-
-    normalized = normalized.gsub(
-      /page\.goto\(['"]https?:\/\/[^'"]+['"]\)/,
-      "page.goto('/')"
-    )
+    normalized = normalized.gsub(/page\.goto\(['"]https?:\/\/[^'"]+['"]\)/, "page.goto('/')")
     normalized = normalized.gsub(
       /(getByRole\(['"]textbox['"],\s*\{\s*name:\s*['"](?:email|Email|username|Username|user|User)['"'][^}]*\}\s*\)\.fill\()['"][^'"]*['"]/,
       '\1process.env.TEST_USERNAME'
@@ -110,11 +106,7 @@ end
       /(getBy(?:Role|Label|Placeholder)\([^)]*['"](?:card|Card|credit|Credit|cvv|CVV)['"'][^)]*\)\.fill\()['"][^'"]*['"]/,
       '\1process.env.TEST_CARD'
     )
-
-    if script_id.present?
-      Script.find_by(id: script_id)&.update!(normalized_content: normalized)
-    end
-
+    Script.find_by(id: script_id)&.update!(normalized_content: normalized) if script_id.present?
     normalized
   rescue StandardError => e
     Rails.logger.error("Error normalizing script: #{e.message}")
@@ -132,3 +124,4 @@ end
       "#{minutes}m #{seconds}s"
     end
   end
+end

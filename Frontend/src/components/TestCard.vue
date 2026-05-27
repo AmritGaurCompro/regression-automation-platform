@@ -13,7 +13,9 @@ import { useDateFormatter } from '@/composables/useDateFormatter';
 import { computed } from 'vue'
 import { useTestStore } from '@/stores/testStore'
 import { storeToRefs } from 'pinia'
+import { ChevronDown, ChevronRight, Play, Trash2, History } from 'lucide-vue-next'
 
+const testStore = useTestStore()
 
 const props = defineProps({
     tests:{
@@ -37,6 +39,11 @@ const queuePosition = computed(() => {
   const pos = queuedRuns.value.indexOf(props.tests.id)
   return pos !== -1 ? pos + 1 : null
 })
+
+const handleDeleteTest = async (testId) => {
+  if (!confirm('Delete this test?')) return
+  await testStore.deleteTest(testId)
+}
 
 </script>
 
@@ -67,8 +74,8 @@ const queuePosition = computed(() => {
       </div>
     </CardContent>
 
-    <CardFooter class="flex justify-center gap-3">
-      <Button size="sm" class="bg-black opacity-75  hover:bg-transparent hover:border-2 hover:border-gray-700 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white" >View</Button>
+    <CardFooter class="flex flex-wrap justify-center gap-3">
+      <Button size="sm" class="bg-black opacity-75  hover:bg-transparent hover:border-2 hover:border-gray-700 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white" @click.stop="handleDeleteTest(tests.id)" ><Trash2 class="w-1 h-1 text-red-500" />Delete</Button>
       <!-- ↓ CHANGED: added isThisTestBusy disable -->
       <Button
         size="sm"

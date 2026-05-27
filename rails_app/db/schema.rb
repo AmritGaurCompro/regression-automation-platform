@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_13_094015) do
+ActiveRecord::Schema.define(version: 2026_05_25_090545) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -23,6 +23,14 @@ ActiveRecord::Schema.define(version: 2026_05_13_094015) do
     t.datetime "updated_at", precision: 6, null: false
     t.string "file_url"
     t.index ["test_run_id"], name: "index_artifacts_on_test_run_id"
+  end
+
+  create_table "features", force: :cascade do |t|
+    t.string "name"
+    t.bigint "user_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["user_id"], name: "index_features_on_user_id"
   end
 
   create_table "jwt_denylists", force: :cascade do |t|
@@ -72,6 +80,8 @@ ActiveRecord::Schema.define(version: 2026_05_13_094015) do
     t.datetime "updated_at", precision: 6, null: false
     t.string "vnc_url"
     t.bigint "user_id", null: false
+    t.bigint "feature_id"
+    t.index ["feature_id"], name: "index_tests_on_feature_id"
     t.index ["script_id"], name: "index_tests_on_script_id"
     t.index ["user_id"], name: "index_tests_on_user_id"
   end
@@ -90,8 +100,10 @@ ActiveRecord::Schema.define(version: 2026_05_13_094015) do
   end
 
   add_foreign_key "artifacts", "test_runs"
+  add_foreign_key "features", "users"
   add_foreign_key "test_runs", "scripts"
   add_foreign_key "test_runs", "tests"
+  add_foreign_key "tests", "features"
   add_foreign_key "tests", "scripts"
   add_foreign_key "tests", "users"
 end

@@ -1,5 +1,5 @@
-# app/models/user.rb  — plain ActiveRecord, zero Devise
 class User < ApplicationRecord
+  has_many :features, dependent: :destroy
   has_many :tests, dependent: :destroy
 
   def self.from_omniauth(auth)
