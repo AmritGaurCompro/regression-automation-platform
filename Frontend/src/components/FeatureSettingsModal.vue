@@ -141,22 +141,20 @@ function handleTagBackspace(testId) {
 }
 
 // Run all tests in feature
-const isRunning = ref(false)
 async function runAllTests() {
-  if (!feature.value) return
-  isRunning.value = true
+  if (!feature.value || isFeatureRunning.value) return
+
   try {
     await testStore.runFeature(feature.value.id, {
       environment: 'QA',
       runner_mode: 'headless',
       retries: 0
     })
+
     await testStore.refreshTestsFromBackend()
     await testStore.refreshFeaturesFromBackend()
   } catch (err) {
     console.error('Failed to run feature:', err)
-  } finally {
-    isRunning.value = false
   }
 }
 
@@ -168,6 +166,18 @@ const liveTests = computed(() => {
 })
 
 defineExpose({ show })
+
+const isFeatureRunning = computed(() => {
+  if (!feature.value) return false
+
+  return feature.value.tests.some(test => {
+    const liveTest = tests.value.find(t => t.id === test.id)
+
+    return ['running', 'queued'].includes(
+      liveTest?.status?.toLowerCase()
+    )
+  })
+})
 </script>
 
 <template>
@@ -302,13 +312,17 @@ defineExpose({ show })
         <!-- Run All button -->
         <div class="flex justify-end pt-3 border-t border-slate-700">
           <Button
-            :disabled="isRunning"
-            class="bg-green-600 hover:bg-green-700 text-white
-                   disabled:opacity-40 disabled:cursor-not-allowed px-6"
-            @click="runAllTests"
-          >
-            <span v-if="isRunning" class="animate-pulse">⏳ Running...</span>
-            <span v-else>▶ Run All Tests</span>
+            :disabled="isFeatureRunning"
+             class="bg-green-600 hover:bg-green-700 text-white
+             disabled:opacity-40 disabled:cursor-not-allowed px-6"
+             @click="runAllTests"
+           >
+        <span v-if="isFeatureRunning" class="animate-pulse">
+           ⏳ Running...
+        </span>
+        <span v-else>
+           ▶ Run All Tests
+        </span>
           </Button>
         </div>
 

@@ -277,7 +277,7 @@ echo "✅ Setup complete! Your recorded script is on the Desktop."
             </div>
 
             <div class="w-fit mx-auto md:mx-0 lg:mx-0 mt-1 lg:mt-0 ">
-            <Button class="ml-3 px-3 py-5 rounded-md focus-visible:ring-0 bg-[#1c2333] text-white hover:bg-[#2a3347] hover:-translate-y-0.5" @click="emit('signout')">🚪 Sign out</Button>
+            <Button class="ml-3 px-3 py-5 rounded-md focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white bg-[#1c2333] text-white hover:bg-[#2a3347] hover:-translate-y-0.5" @click="emit('signout')">🚪 Sign out</Button>
             </div>
 
           </div>

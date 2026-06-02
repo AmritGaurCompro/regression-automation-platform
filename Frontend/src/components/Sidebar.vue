@@ -61,9 +61,24 @@ const toggleFeature = (featureId) => {
   expandedFeatures.value = new Set(expandedFeatures.value)
 }
 
+
+const isFeatureRunning = (feature) => {
+  return feature.tests.some(test => {
+    const liveTest = tests.value.find(t => t.id === test.id)
+
+    return ['running', 'queued'].includes(
+      liveTest?.status?.toLowerCase()
+    )
+  })
+}
 const handleRunFeature = async (featureId) => {
+  const feature = features.value.find(f => f.id === featureId)
+
+  if (!feature || isFeatureRunning(feature)) return
+
   try {
     await testStore.runFeature(featureId, testStore.testRunConfig)
+
     await testStore.refreshTestsFromBackend()
     await testStore.refreshFeaturesFromBackend()
   } catch (err) {
@@ -176,14 +191,26 @@ const statusColor = (status) => {
               </div>
               <div class="flex flex-wrap justify-center gap-1">
                 <!-- Run All button -->
-                <Button
-                  size="icon"
-                  class="h-6 w-6 bg-green-600 hover:bg-green-700"
-                  @click.stop="handleRunFeature(feature.id)"
-                  title="Run all tests in feature"
-                >
-                  <Play class="w-3 h-3" />
-                </Button>
+<Button
+  size="icon"
+  :disabled="isFeatureRunning(feature)"
+  class="h-6 w-6 bg-green-600 hover:bg-green-700
+         disabled:opacity-40 disabled:cursor-not-allowed"
+  @click.stop="handleRunFeature(feature.id)"
+  :title="isFeatureRunning(feature) ? 'Feature is running' : 'Run all tests in feature'"
+>
+  <span
+    v-if="isFeatureRunning(feature)"
+    class="text-[10px] animate-pulse"
+  >
+    ⏳
+  </span>
+
+  <Play
+    v-else
+    class="w-3 h-3"
+  />
+</Button>
                 <!-- History button -->
                 <Button
                   size="icon"
