@@ -98,7 +98,6 @@ const handleDeleteTest = async (testId) => {
     const featureTest = features.value.flatMap(f => f.tests)[0]
     const nextTest = tests.value.find(t => t.id === featureTest?.id) || tests.value[0]
     testStore.setSelectedTest(nextTest)
-    // Update expanded features
     if (parentFeature) {
       expandedFeatures.value.delete(parentFeature.id)
     }
@@ -151,18 +150,22 @@ const statusColor = (status) => {
       />
       <ScrollArea class="h-[28rem] w-full mt-5">
         <div class="pr-3 flex flex-col gap-2">
+          <!-- Features -->
+          <div v-if="filteredFeatures.length > 0 && getStandaloneTests().length >= 0" class="flex items-center gap-2 my-1">
+            <Separator class="flex-1" />
+            <span class="text-xs text-slate-500">Features</span>
+            <Separator class="flex-1" />
+          </div>
 
-        <!-- Features -->
-<!-- Features -->
           <div v-for="feature in filteredFeatures" :key="feature.id">
             <!-- Feature Header -->
             <div
-                :class="[
+              :class="[
                 'flex flex-col items-center gap-5 text-lg font-bold justify-center px-4 py-4 rounded-md cursor-pointer transition-all duration-200',
                 expandedFeatures.has(feature.id)
                   ? 'bg-[#1e2d45] border-l-4 border-indigo-500 shadow-md shadow-indigo-900/30'
                   : 'bg-[#1c2333] border-l-4 border-transparent hover:bg-[#2a3347]'
-                ]"
+              ]"
               @click="toggleFeature(feature.id)"
             >
               <div class="flex items-center gap-2">
@@ -199,23 +202,55 @@ const statusColor = (status) => {
                 >
                   <Trash2 class="w-3 h-3 text-red-500" />
                 </Button>
+                <!-- Settings button -->
                 <Button
-  size="icon"
-  class="h-6 w-6 bg-transparent hover:bg-slate-700"
-  @click.stop="handleOpenSettings(feature)"
-  title="Feature settings"
->
-  <Settings class="w-3 h-3 text-slate-400" />
-</Button>
+                  size="icon"
+                  class="h-6 w-6 bg-transparent hover:bg-slate-700"
+                  @click.stop="handleOpenSettings(feature)"
+                  title="Feature settings"
+                >
+                  <Settings class="w-3 h-3 text-slate-400" />
+                </Button>
               </div>
             </div>
+
             <!-- Feature Tests (collapsible) -->
-            <div v-if="expandedFeatures.has(feature.id)" class="ml-4 mt-1 flex flex-col gap-1">
-              <div v-for="test in feature.tests" :key="test.id">
+            <div
+              v-if="expandedFeatures.has(feature.id)"
+              class="relative ml-1 mt-2 flex flex-col gap-2"
+            >
+              <!-- Vertical tree line -->
+              <div
+                class="absolute left-2 top-0 bottom-0 w-px bg-indigo-500/40"
+              ></div>
+
+              <div
+                v-for="test in feature.tests"
+                :key="test.id"
+                class="relative pl-6"
+              >
+                <!-- Horizontal connector -->
+                <div
+                  class="absolute left-2 top-1/2 h-px w-4 bg-indigo-500/40"
+                ></div>
+
+                <!-- Node -->
+                <div
+                  class="absolute left-[5px] top-1/2 -translate-y-1/2
+                         h-2.5 w-2.5 rounded-full transition-all duration-200"
+                  :class="
+                    selectedTest?.id === test.id
+                      ? 'bg-violet-400 scale-125 ring-2 ring-violet-500/40 shadow-md shadow-violet-500/30'
+                      : 'bg-slate-500'
+                  "
+                ></div>
+
                 <TestCard
                   :tests="tests.find(t => t.id === test.id) || test"
                   @click="testStore.setSelectedTest(tests.find(t => t.id === test.id) || test)"
-                  :class="selectedTest?.id === test.id ? 'border-[#6366f1] border-l-[#8b5cf6]' : ''"
+                  :class="selectedTest?.id === test.id
+                    ? 'border-[#6366f1] border-l-[#8b5cf6]'
+                    : ''"
                   @action="handleRunTest(tests.find(t => t.id === test.id) || test)"
                   @delete="handleDeleteTest(test.id)"
                 />
@@ -224,7 +259,7 @@ const statusColor = (status) => {
           </div>
 
           <!-- Separator between features and standalone tests -->
-          <div v-if="filteredFeatures.length > 0 && getStandaloneTests().length > 0" class="flex items-center gap-2 my-1">
+          <div v-if="filteredFeatures.length >= 0 && getStandaloneTests().length > 0" class="flex items-center gap-2 my-1">
             <Separator class="flex-1" />
             <span class="text-xs text-slate-500">Standalone</span>
             <Separator class="flex-1" />
@@ -240,7 +275,6 @@ const statusColor = (status) => {
               @delete="handleDeleteTest(test.id)"
             />
           </div>
-
         </div>
       </ScrollArea>
     </CardContent>
@@ -251,5 +285,5 @@ const statusColor = (status) => {
 
   <!-- Feature Run History Modal -->
   <FeatureRunHistory ref="featureHistoryRef" />
-   <FeatureSettingsModal ref="featureSettingsRef" />
+  <FeatureSettingsModal ref="featureSettingsRef" />
 </template>

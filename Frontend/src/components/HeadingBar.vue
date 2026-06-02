@@ -5,9 +5,41 @@
            px-6 py-4 gap-4"
   >
     <div class="flex-1 min-w-0">
-      <h1 class="text-xl font-bold text-white">
-        {{ title?.split('_').slice(0, -1).join('_') || title }}
-      </h1>
+      <!-- Test Name + Feature Badge -->
+      <div class="flex items-center gap-3 flex-wrap">
+        <h1 class="text-xl font-bold text-white">
+          {{ title?.split('_').slice(0, -1).join('_') || title }}
+        </h1>
+
+        <div
+          class="inline-flex items-center gap-2 px-3 py-1 rounded-full border backdrop-blur-sm transition-all"
+          :class="
+            featureName === 'Standalone'
+              ? 'bg-gradient-to-r from-purple-600/20 to-fuchsia-600/20 border-purple-500/30'
+              : 'bg-gradient-to-r from-cyan-600/20 to-blue-600/20 border-cyan-500/30'
+          "
+        >
+          <span
+            class="h-2 w-2 rounded-full animate-pulse"
+            :class="
+              featureName === 'Standalone'
+                ? 'bg-purple-400'
+                : 'bg-cyan-400'
+            "
+          />
+
+          <span
+            class="text-xs font-semibold uppercase tracking-widest"
+            :class="
+              featureName === 'Standalone'
+                ? 'text-purple-200'
+                : 'text-cyan-200'
+            "
+          >
+            {{ featureName }}
+          </span>
+        </div>
+      </div>
 
       <div class="mt-2 flex flex-wrap items-center gap-1.5">
         <!-- Tag chips with cross -->
@@ -36,7 +68,9 @@
         <span
           v-if="tags?.length && environment"
           class="mx-1 text-slate-600"
-        >•</span>
+        >
+          •
+        </span>
 
         <span v-if="environment" class="text-sm text-slate-400">
           {{ environment }}
@@ -52,8 +86,12 @@
                disabled:opacity-40 disabled:cursor-not-allowed"
         @click="runTest"
       >
-        <span v-if="isThisTestBusy" class="animate-pulse">⏳ Running...</span>
-        <span v-else>▶ Run Test</span>
+        <span v-if="isThisTestBusy" class="animate-pulse">
+          ⏳ Running...
+        </span>
+        <span v-else>
+          ▶ Run Test
+        </span>
       </button>
     </div>
   </div>
@@ -74,11 +112,18 @@ const props = defineProps({
 const emit = defineEmits(['removeTag'])
 
 const { runSelectedTest: runTest } = useTestOperations()
-const { queuedRuns, selectedTest } = storeToRefs(useTestStore())
+const { queuedRuns, selectedTest, tests, features } = storeToRefs(useTestStore())
 
 const isThisTestBusy = computed(() => {
   return selectedTest.value?.status === 'running' ||
          queuedRuns.value.includes(selectedTest.value?.id)
+})
+
+const featureName = computed(() => {
+  const feature = features.value.find(f => 
+    f.tests.some(t => t.id === selectedTest.value?.id)
+  )
+  return feature?.name || 'Standalone'
 })
 
 function removeTag(index) {
