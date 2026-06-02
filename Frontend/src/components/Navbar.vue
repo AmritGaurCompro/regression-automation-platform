@@ -265,13 +265,21 @@ echo "✅ Setup complete! Your recorded script is on the Desktop."
             <Input v-model="searchQuery" placeholder="Search by name, tag, or environment..." class="flex flex-1 pl-10 p-5 px-9 bg-[#161b26] focus:bg-gray-800" />
           </div>
 
-          <div class="flex gap-2 flex-wrap lg:flex-nowrap items-center">
+          <div class="mx-auto xl:mx-0 flex sm:flex-col md:flex-row gap-2 flex-wrap lg:flex-nowrap items-center mb-2 xl:mb-0">
+
+            <div class="w-full md:w-fit mx-auto md:mx-0 lg:mx-0 flex justify-around md:gap-5 gap-2">
             <Button class="px-3 py-5 rounded-md focus-visible:ring-0 bg-yellow-600 text-white hover:bg-yellow-700 hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap" @click="downloadLocalSetup">⚙️ Local Setup</Button>              
             <!-- <Button class="bg-red-500 px-3 py-5 rounded-md hover:bg-red-600 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white animate-pulse transition-all duration-200 ease-out hover:-translate-y-0.5 focus-visible:-translate-y-0.5 whitespace-nowrap" @click="openRecordModal">● Record New</Button> -->
-            <RecordTestModal ref="recordModalRef" @test-created="onTestCreated" />
-            <Button class="px-3 py-5 rounded-md focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white  hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white animate-pulse transition-all duration-200 ease-out hover:-translate-y-0.5 focus-visible:-translate-y-0.5 whitespace-nowrap" @click="openImportModal">📥 Import</Button>
+            <!-- <RecordTestModal ref="recordModalRef" @test-created="onTestCreated" /> -->
+            <Button class="px-3 py-5 rounded-md focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white focus-visible:-translate-y-0.5    animate-pulse transition-all duration-200 ease-out hover:-translate-y-0.5 whitespace-nowrap" @click="openImportModal">📥 Import</Button>
             <ImportTestModal ref="importModalRef" />
+
+            </div>
+
+            <div class="w-fit mx-auto md:mx-0 lg:mx-0 mt-1 lg:mt-0 ">
             <Button class="ml-3 px-3 py-5 rounded-md focus-visible:ring-0 bg-[#1c2333] text-white hover:bg-[#2a3347] hover:-translate-y-0.5" @click="emit('signout')">🚪 Sign out</Button>
+            </div>
+
           </div>
         </div>
      

@@ -39,7 +39,7 @@ onMounted(async () => {
   }
 })
 
-const { filteredTests } = useTestFilter(tests, searchQuery)
+const { filteredTests, filteredFeatures } = useTestFilter(tests, searchQuery, features)
 const { passCnt, failCnt, runCnt } = useTestStats(tests)
 
 const handleRunTest = async (test) => {
@@ -78,7 +78,7 @@ const handleViewHistory = async (feature) => {
 
 const getStandaloneTests = () => {
   const featureTestIds = new Set(
-    features.value.flatMap(f => f.tests.map(t => t.id))
+    filteredFeatures.value.flatMap(f => f.tests.map(t => t.id))
   )
   return filteredTests.value.filter(t => !featureTestIds.has(t.id))
 }
@@ -99,7 +99,7 @@ const statusColor = (status) => {
     <CardHeader class="bg-[#1c2333]">
       <CardTitle class="font-bold">Test Scripts</CardTitle>
       <CardDescription class="text-xs text-slate-500 font-semibold">
-        {{ filteredTests.length }} of {{ tests.length }} tests
+        {{ (filteredTests.length + filteredFeatures.reduce((acc, f) => acc + f.tests.length, 0)) }} of {{ tests.length + features.reduce((acc, f) => acc + f.tests.length, 0) }} tests
       </CardDescription>
     </CardHeader>
     <Separator />
@@ -114,7 +114,7 @@ const statusColor = (status) => {
 
         <!-- Features -->
 <!-- Features -->
-          <div v-for="feature in features" :key="feature.id">
+          <div v-for="feature in filteredFeatures" :key="feature.id">
             <!-- Feature Header -->
             <div
               class="flex flex-col items-center gap-5 text-lg font-bold  justify-center px-4 py-4 rounded-md bg-[#1c2333] cursor-pointer hover:bg-[#2a3347] transition-colors"
@@ -170,7 +170,7 @@ const statusColor = (status) => {
           </div>
 
           <!-- Separator between features and standalone tests -->
-          <div v-if="features.length > 0 && getStandaloneTests().length > 0" class="flex items-center gap-2 my-1">
+          <div v-if="filteredFeatures.length > 0 && getStandaloneTests().length > 0" class="flex items-center gap-2 my-1">
             <Separator class="flex-1" />
             <span class="text-xs text-slate-500">Standalone</span>
             <Separator class="flex-1" />

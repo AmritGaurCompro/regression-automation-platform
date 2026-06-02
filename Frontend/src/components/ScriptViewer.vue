@@ -45,7 +45,7 @@
           class="rounded-md border px-3 py-1 text-sm hover:bg-muted"
           @click="onCopy"
         >
-          📋 Copy
+          {{ copyText }}
         </button>
       </div>
     </div>
@@ -143,7 +143,17 @@ const applyNormalization = () => {
   emit('apply-normalization')
 }
 
+
+let copyText=ref("📋 Copy")
+
 const onCopy = () => {
+
+  copyText.value = "✅ Copied!"
+
+  setTimeout(()=>{
+    copyText.value = "📋 Copy"
+  },2000)
+
   navigator.clipboard.writeText(displayedScript.value)
   emit('copy')
 }
