@@ -108,14 +108,30 @@ async function refreshTestsFromBackend() {
   }
 
   async function deleteFeature(featureId) {
-    try {
-      await axios.delete(`${API_BASE_URL}/api/features/${featureId}`)
-      features.value = features.value.filter(f => f.id !== featureId)
-    } catch (err) {
-      console.error("Failed to delete feature:", err)
-      throw err
+  try {
+    const feature = features.value.find(f => f.id === featureId)
+    const featureTestIds = feature?.tests.map(t => t.id) || []
+
+    // Delete all tests first
+    await Promise.all(featureTestIds.map(testId => 
+      axios.delete(`${API_BASE_URL}/api/tests/${testId}`)
+    ))
+
+    // Only delete feature after all tests are gone
+    await axios.delete(`${API_BASE_URL}/api/features/${featureId}`)
+
+    // Now update local state
+    features.value = features.value.filter(f => f.id !== featureId)
+    tests.value = tests.value.filter(t => !featureTestIds.includes(t.id))
+
+    if (featureTestIds.includes(selectedTest.value?.id)) {
+      selectedTest.value = tests.value[0] || null
     }
+  } catch (err) {
+    console.error("Failed to delete feature:", err)
+    throw err
   }
+}
 
   async function deleteTest(testId) {
     try {

@@ -22,7 +22,7 @@ const props = defineProps({
     required: true
   }
 })
-const emit = defineEmits(['action'])
+const emit = defineEmits(['action', 'delete'])
 
 const { formatDateTime } = useDateFormatter()
 const { queuedRuns } = storeToRefs(useTestStore())
@@ -37,16 +37,6 @@ const queuePosition = computed(() => {
   return pos !== -1 ? pos + 1 : null
 })
 
-const handleDeleteTest = async (testId) => {
-  if (!confirm('Delete this test?')) return
-  await testStore.deleteTest(testId)
-}
-
-const handleRemoveTag = async (index) => {
-  const newTags = (props.tests.tags || []).filter((_, i) => i !== index)
-  testStore.syncTagsToTestsList(props.tests.id, newTags)  // ← updates both places instantly
-  await testStore.saveTestMeta(props.tests.id, { tags: newTags })
-}
 </script>
 
 <template>
@@ -97,16 +87,8 @@ const handleRemoveTag = async (index) => {
     </CardContent>
 
     <CardFooter class="flex flex-wrap justify-center gap-3">
-      <Button
-        size="sm"
-        class="bg-black opacity-75 hover:bg-transparent hover:border-2 hover:border-gray-700
-               focus-visible:ring-0 focus-visible:outline focus-visible:outline-2
-               focus-visible:outline-white"
-        @click.stop="handleDeleteTest(tests.id)"
-      >
-        <Trash2 class="w-1 h-1 text-red-500" />Delete
-      </Button>
-
+      <Button size="sm" class="bg-black opacity-75  hover:bg-transparent hover:border-2 hover:border-gray-700 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white" @click.stop="emit('delete', tests.id)" ><Trash2 class="w-1 h-1 text-red-500" />Delete</Button>
+      <!-- ↓ CHANGED: added isThisTestBusy disable -->
       <Button
         size="sm"
         :disabled="isThisTestBusy"

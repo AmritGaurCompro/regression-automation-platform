@@ -74,6 +74,40 @@ const handleRunFeature = async (featureId) => {
 const handleDeleteFeature = async (featureId) => {
   if (!confirm('Delete this feature? This will result in all tests deletion.')) return
   await testStore.deleteFeature(featureId)
+  await testStore.refreshTestsFromBackend()
+  await testStore.refreshFeaturesFromBackend()
+  if (tests.value.length > 0) {
+    const featureTest = features.value.flatMap(f => f.tests)[0]
+    const nextTest = featureTest ? tests.value.find(t => t.id === featureTest.id) : tests.value[0]
+    testStore.setSelectedTest(nextTest)
+    const parentFeature = features.value.find(f => f.tests.some(t => t.id === nextTest.id))
+    if (parentFeature) {
+      expandedFeatures.value.add(parentFeature.id)
+      expandedFeatures.value = new Set(expandedFeatures.value)
+    }
+  }
+}
+
+const handleDeleteTest = async (testId) => {
+  if (!confirm('Delete this test?')) return
+  const parentFeature = features.value.find(f => f.tests.some(t => t.id === testId))
+  await testStore.deleteTest(testId)
+  await testStore.refreshTestsFromBackend()
+  await testStore.refreshFeaturesFromBackend()
+  if (tests.value.length > 0) {
+    const featureTest = features.value.flatMap(f => f.tests)[0]
+    const nextTest = tests.value.find(t => t.id === featureTest?.id) || tests.value[0]
+    testStore.setSelectedTest(nextTest)
+    // Update expanded features
+    if (parentFeature) {
+      expandedFeatures.value.delete(parentFeature.id)
+    }
+    const nextFeature = features.value.find(f => f.tests.some(t => t.id === nextTest.id))
+    if (nextFeature) {
+      expandedFeatures.value.add(nextFeature.id)
+    }
+    expandedFeatures.value = new Set(expandedFeatures.value)
+  }
 }
 
 const handleViewHistory = async (feature) => {
@@ -123,7 +157,12 @@ const statusColor = (status) => {
           <div v-for="feature in filteredFeatures" :key="feature.id">
             <!-- Feature Header -->
             <div
-              class="flex flex-col items-center gap-5 text-lg font-bold  justify-center px-4 py-4 rounded-md bg-[#1c2333] cursor-pointer hover:bg-[#2a3347] transition-colors"
+                :class="[
+                'flex flex-col items-center gap-5 text-lg font-bold justify-center px-4 py-4 rounded-md cursor-pointer transition-all duration-200',
+                expandedFeatures.has(feature.id)
+                  ? 'bg-[#1e2d45] border-l-4 border-indigo-500 shadow-md shadow-indigo-900/30'
+                  : 'bg-[#1c2333] border-l-4 border-transparent hover:bg-[#2a3347]'
+                ]"
               @click="toggleFeature(feature.id)"
             >
               <div class="flex items-center gap-2">
@@ -178,6 +217,7 @@ const statusColor = (status) => {
                   @click="testStore.setSelectedTest(tests.find(t => t.id === test.id) || test)"
                   :class="selectedTest?.id === test.id ? 'border-[#6366f1] border-l-[#8b5cf6]' : ''"
                   @action="handleRunTest(tests.find(t => t.id === test.id) || test)"
+                  @delete="handleDeleteTest(test.id)"
                 />
               </div>
             </div>
@@ -197,6 +237,7 @@ const statusColor = (status) => {
               @click="testStore.setSelectedTest(test)"
               :class="selectedTest?.id === test.id ? 'border-[#6366f1] border-l-[#8b5cf6]' : ''"
               @action="handleRunTest(test)"
+              @delete="handleDeleteTest(test.id)"
             />
           </div>
 
