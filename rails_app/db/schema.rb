@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_25_090545) do
+ActiveRecord::Schema.define(version: 2026_06_02_042859) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -81,6 +81,10 @@ ActiveRecord::Schema.define(version: 2026_05_25_090545) do
     t.string "vnc_url"
     t.bigint "user_id", null: false
     t.bigint "feature_id"
+    t.string "tags"
+    t.integer "retries_on_failure"
+    t.string "runner_mode"
+    t.string "environment"
     t.index ["feature_id"], name: "index_tests_on_feature_id"
     t.index ["script_id"], name: "index_tests_on_script_id"
     t.index ["user_id"], name: "index_tests_on_user_id"

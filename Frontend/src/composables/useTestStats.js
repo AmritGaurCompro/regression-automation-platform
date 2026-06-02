@@ -15,10 +15,15 @@ export function useTestStats(tests) {
 
   const totalCnt = computed(() => tests.value.length)
 
+  const queueCnt = computed(() =>
+    tests.value.filter(t => t.status === 'queued').length
+  )
+
   return {
     passCnt,
     failCnt,
     runCnt,
+    queueCnt,
     totalCnt
   }
 }

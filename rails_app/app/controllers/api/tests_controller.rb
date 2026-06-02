@@ -17,6 +17,34 @@ class Api::TestsController < ApplicationController
     render json: build_test_data(test, last_run)
   end
 
+  def update
+    test = current_user.tests.find(params[:id])
+
+    if params[:tags].present?
+      raw = params[:tags]
+      cleaned = Array(raw).flat_map do |t|
+        loop do
+          break t unless t.is_a?(String) && t.start_with?('[', '"')
+          parsed = JSON.parse(t) rescue break
+          t = parsed
+        end
+        Array(t)
+      end.map(&:to_s).map(&:strip).reject(&:blank?).uniq
+      test.tags = cleaned.join(',')
+    else
+      # explicitly clear tags if empty array or blank sent
+      test.tags = '' if params.key?(:tags)
+    end
+
+    if test.update(test_params.except(:tags))
+      render json: { message: 'Test updated' }, status: :ok
+    else
+      render json: test.errors, status: :unprocessable_entity
+    end
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Test not found' }, status: :not_found
+  end
+
   def script
     test = current_user.tests.find(params[:id])
     render json: { script: { raw: test.script.raw_content, normalized: test.script.normalized_content } }, status: :ok
@@ -34,28 +62,35 @@ class Api::TestsController < ApplicationController
 
   private
 
-  def build_test_data(test, last_run)
-    {
-      id:          test.id,
-      title:       test.title,
-      environment: last_run&.environment,
-      status:      last_run&.status || "NEW",
-      lastRun:     last_run&.finished_at,
-      startedAt:   last_run&.created_at,
-      finishedAt:  last_run&.updated_at,
-      duration:    calculate_duration(last_run),
-      tags:        last_run&.tags || [],
-      vnc_url:     last_run&.vnc_url.presence || test.vnc_url,
-      script:      load_script_content(test.script_id),
-      artifacts:   last_run&.artifacts&.map do |a|
-        {
-          kind:     a.kind,
-          url:      a.file_url,
-          metadata: a.metadata
-        }
-      end || []
-    }
+  def test_params
+    params.permit(
+      :environment,
+      :runner_mode,
+      :retries_on_failure,
+      tags: []
+    )
   end
+
+def build_test_data(test, last_run)
+  {
+    id:                 test.id,
+    title:              test.title,
+    environment:        last_run&.environment || test.environment || 'QA',
+    status:             last_run&.status || "NEW",
+    lastRun:            last_run&.finished_at,
+    startedAt:          last_run&.created_at,
+    finishedAt:         last_run&.updated_at,
+    duration:           calculate_duration(last_run),
+    tags:               test.tags_list || [],
+    retries_on_failure: test.retries_on_failure || 2,
+    runner_mode:        test.runner_mode || 'headless',
+    vnc_url:            last_run&.vnc_url.presence || test.vnc_url,
+    script:             load_script_content(test.script_id),
+    artifacts:          last_run&.artifacts&.map do |a|
+      { kind: a.kind, url: a.file_url, metadata: a.metadata }
+    end || []
+  }
+end
 
   def load_script_content(script_id)
     return { raw: nil, normalized: nil } if script_id.blank?

@@ -8,28 +8,25 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from './ui/button';
-import Badge from './ui/badge/Badge.vue';
 import { useDateFormatter } from '@/composables/useDateFormatter';
 import { computed } from 'vue'
 import { useTestStore } from '@/stores/testStore'
 import { storeToRefs } from 'pinia'
-import { ChevronDown, ChevronRight, Play, Trash2, History } from 'lucide-vue-next'
+import { Trash2 } from 'lucide-vue-next'
 
 const testStore = useTestStore()
 
 const props = defineProps({
-    tests:{
-        type: Object,
-        required: true
-    }
+  tests: {
+    type: Object,
+    required: true
+  }
 })
 const emit = defineEmits(['action'])
 
 const { formatDateTime } = useDateFormatter()
-
 const { queuedRuns } = storeToRefs(useTestStore())
 
-// ↓ ADDED: check if this specific test is busy
 const isThisTestBusy = computed(() => {
   return props.tests?.status === 'running' ||
          queuedRuns.value.includes(props.tests?.id)
@@ -45,42 +42,77 @@ const handleDeleteTest = async (testId) => {
   await testStore.deleteTest(testId)
 }
 
+const handleRemoveTag = async (index) => {
+  const newTags = (props.tests.tags || []).filter((_, i) => i !== index)
+  testStore.syncTagsToTestsList(props.tests.id, newTags)  // ← updates both places instantly
+  await testStore.saveTestMeta(props.tests.id, { tags: newTags })
+}
 </script>
 
 <template>
-    <Card class="bg-[#1c2333] mt-5 cursor-pointer border-l-[#1e293b] border-l-4 border-r-2 border-t-2 border-b-2 hover:border-sky-500  transition-colors duration-200 ease-out hover:bg-[#1a2740]">
+  <Card class="bg-[#1c2333] mt-5 cursor-pointer border-l-[#1e293b] border-l-4 border-r-2 border-t-2 border-b-2 hover:border-sky-500 transition-colors duration-200 ease-out hover:bg-[#1a2740]">
     <CardHeader>
       <CardTitle class="flex justify-between gap-3 items-start flex-wrap">
 
         <div>
-          <p class="animate-pulse" v-if="tests?.status=='failed'">🔴</p>
-          <p  v-else-if="tests.status=='passed'">🟢</p>
+          <p class="animate-pulse" v-if="tests?.status == 'failed'">🔴</p>
+          <p v-else-if="tests.status == 'passed'">🟢</p>
           <p v-else>🔘</p>
-
           <p class="text-slate-500 text-xs font-semibold mt-1">{{ tests?.status }}</p>
         </div>
 
-        <div class="flex flex-col gap-3 ">
-          <p class="text-wrap">{{ tests?.title?.split('_').slice(0, -1).join('_') || tests?.title }}</p>          <p class="text-xs font-normal">🌐 {{ tests?.environment }}</p>
+        <div class="flex flex-col gap-3">
+          <p class="text-wrap">{{ tests?.title?.split('_').slice(0, -1).join('_') || tests?.title }}</p>
+          <p class="text-xs font-normal">🌐 {{ tests?.environment }}</p>
         </div>
 
-        <p class="text-slate-500 text-xs font-semibold text-wrap" v-if="tests?.lastRun!=null" >{{ formatDateTime(new Date(tests.lastRun)) }}</p>
+        <p class="text-slate-500 text-xs font-semibold text-wrap" v-if="tests?.lastRun != null">
+          {{ formatDateTime(new Date(tests.lastRun)) }}
+        </p>
         <p class="text-slate-500 text-xs font-semibold text-wrap" v-else>Never run</p>
+
       </CardTitle>
     </CardHeader>
+
     <CardContent>
-      <div class="flex justify-center gap-2 mt-2 flex-wrap">
-        <Badge v-for="(tag, index) in tests?.tags" :key="index" variant="outline" class="bg-black opacity-75 py-1 cursor-pointer">{{ tag }}</Badge>
+      <div class="flex flex-wrap gap-1.5 mt-2 justify-center">
+        <span
+          v-for="(tag, index) in tests?.tags"
+          :key="index"
+          class="inline-flex items-center gap-1 rounded-md
+                 bg-indigo-600/20 border border-indigo-500/30
+                 px-2 py-0.5 text-xs text-indigo-300"
+        >
+          <span class="break-all max-w-[80px]">{{ tag }}</span>
+          <button
+            type="button"
+            class="ml-0.5 text-indigo-400 hover:text-white
+                   transition-colors leading-none text-sm"
+            @click.stop="handleRemoveTag(index)"
+          >
+            ×
+          </button>
+        </span>
       </div>
     </CardContent>
 
     <CardFooter class="flex flex-wrap justify-center gap-3">
-      <Button size="sm" class="bg-black opacity-75  hover:bg-transparent hover:border-2 hover:border-gray-700 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white" @click.stop="handleDeleteTest(tests.id)" ><Trash2 class="w-1 h-1 text-red-500" />Delete</Button>
-      <!-- ↓ CHANGED: added isThisTestBusy disable -->
+      <Button
+        size="sm"
+        class="bg-black opacity-75 hover:bg-transparent hover:border-2 hover:border-gray-700
+               focus-visible:ring-0 focus-visible:outline focus-visible:outline-2
+               focus-visible:outline-white"
+        @click.stop="handleDeleteTest(tests.id)"
+      >
+        <Trash2 class="w-1 h-1 text-red-500" />Delete
+      </Button>
+
       <Button
         size="sm"
         :disabled="isThisTestBusy"
-        class="bg-black opacity-75  hover:bg-transparent hover:border-2 hover:border-gray-700 focus-visible:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white disabled:opacity-40 disabled:cursor-not-allowed"
+        class="bg-black opacity-75 hover:bg-transparent hover:border-2 hover:border-gray-700
+               focus-visible:ring-0 focus-visible:outline focus-visible:outline-2
+               focus-visible:outline-white disabled:opacity-40 disabled:cursor-not-allowed"
         @click.stop="emit('action')"
       >
         <span v-if="tests?.status === 'running'" class="animate-pulse">⏳ Running...</span>
@@ -88,6 +120,5 @@ const handleDeleteTest = async (testId) => {
         <span v-else>▶ Run</span>
       </Button>
     </CardFooter>
-    
   </Card>
 </template>

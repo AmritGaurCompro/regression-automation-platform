@@ -19,9 +19,11 @@ import { useTestFilter } from '@/composables/useTestFilter'
 import { useTestStats } from '@/composables/useTestStats'
 import { useTestOperations } from '@/composables/useTestOperations'
 import ScrollArea from './ui/scroll-area/ScrollArea.vue'
-import { ChevronDown, ChevronRight, Play, Trash2, History } from 'lucide-vue-next'
+import { ChevronDown, ChevronRight, Play, Trash2, History, Settings } from 'lucide-vue-next'
 import Button from './ui/button/Button.vue'
+import FeatureSettingsModal from './FeatureSettingsModal.vue'
 
+const featureSettingsRef = ref(null)
 const testStore = useTestStore()
 const { tests, features, selectedTest, searchQuery } = storeToRefs(testStore)
 const { runSelectedTest } = useTestOperations()
@@ -39,8 +41,11 @@ onMounted(async () => {
   }
 })
 
+const handleOpenSettings = (feature) => {
+  featureSettingsRef.value?.show(feature)
+}
 const { filteredTests, filteredFeatures } = useTestFilter(tests, searchQuery, features)
-const { passCnt, failCnt, runCnt } = useTestStats(tests)
+const { passCnt, failCnt, runCnt, queueCnt } = useTestStats(tests)
 
 const handleRunTest = async (test) => {
   testStore.setSelectedTest(test)
@@ -108,6 +113,7 @@ const statusColor = (status) => {
         :passCnt="passCnt"
         :failCnt="failCnt"
         :runCnt="runCnt"
+        :queueCnt="queueCnt"
       />
       <ScrollArea class="h-[28rem] w-full mt-5">
         <div class="pr-3 flex flex-col gap-2">
@@ -154,6 +160,14 @@ const statusColor = (status) => {
                 >
                   <Trash2 class="w-3 h-3 text-red-500" />
                 </Button>
+                <Button
+  size="icon"
+  class="h-6 w-6 bg-transparent hover:bg-slate-700"
+  @click.stop="handleOpenSettings(feature)"
+  title="Feature settings"
+>
+  <Settings class="w-3 h-3 text-slate-400" />
+</Button>
               </div>
             </div>
             <!-- Feature Tests (collapsible) -->
@@ -196,4 +210,5 @@ const statusColor = (status) => {
 
   <!-- Feature Run History Modal -->
   <FeatureRunHistory ref="featureHistoryRef" />
+   <FeatureSettingsModal ref="featureSettingsRef" />
 </template>
