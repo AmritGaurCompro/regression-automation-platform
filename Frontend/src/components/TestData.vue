@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col lg:flex-row mt-0 ml-5 mr-5 gap-4 bg-[#161b26]">
+  <div class="flex flex-col lg:flex-row gap-4 rounded-xl border border-slate-800 bg-[#1c2333] px-5 py-4">
 
     <!-- Environment -->
     <div class="w-full lg:w-64">
@@ -7,7 +7,7 @@
         ENVIRONMENT
       </label>
       <select
-        class="w-full rounded-lg bg-background px-3 py-2 text-sm"
+        class="w-full rounded-lg border border-slate-800 bg-background px-3 py-2 text-sm focus:border-slate-600 focus:outline-none"
         :value="environment"
         @change="emit('update:environment', $event.target.value)"
       >
@@ -23,7 +23,7 @@
         RUNNER MODE
       </label>
       <select
-        class="w-full rounded-lg bg-background px-3 py-2 text-sm"
+        class="w-full rounded-lg border border-slate-800 bg-background px-3 py-2 text-sm focus:border-slate-600 focus:outline-none"
         :value="runnerMode"
         @change="emit('update:runnerMode', $event.target.value)"
       >
@@ -40,7 +40,7 @@
       </label>
       <div
         class="min-h-[40px] w-full rounded-lg bg-background px-2 py-1.5
-               flex flex-wrap gap-1.5 cursor-text border border-transparent
+               flex flex-wrap gap-1.5 cursor-text border border-slate-800
                focus-within:border-slate-600 transition-colors"
         @click="inputRef?.focus()"
       >
@@ -71,7 +71,7 @@
       </label>
     
       <select
-        class="w-full rounded-lg bg-background px-3 py-2 text-sm"
+        class="w-full rounded-lg border border-slate-800 bg-background px-3 py-2 text-sm focus:border-slate-600 focus:outline-none"
         :value="retries"
         @change="emit('update:retries', Number($event.target.value))"
       >

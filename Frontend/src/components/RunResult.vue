@@ -107,7 +107,7 @@ const fileArtifacts = computed(() =>
 />
          <RunHistory :runs="testRuns" />
          <Card
-  class="bg-[#0d1117] border-l-[3px] border-l-[#6366f1] w-full
+  class="bg-[#0d1117] border-l-[3px] border-l-slate-600 w-full
          border-r-transparent border-b-transparent border-t-transparent
          rounded-lg"
 >

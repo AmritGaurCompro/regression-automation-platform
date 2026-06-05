@@ -68,12 +68,12 @@ async function handleSignout() {
   <RouterView v-if="route.path === '/auth/callback'" />
 
   <!-- Loading -->
-  <div v-else-if="loading" class="min-h-screen flex items-center justify-center bg-[#0b0d12]">
+  <div v-else-if="loading" class="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-950">
     <p class="text-sm text-muted-foreground animate-pulse">Loading…</p>
   </div>
 
   <!-- Unauthenticated -->
-  <div v-else-if="!user" class="min-h-screen flex items-center justify-center bg-[#0b0d12]">
+  <div v-else-if="!user" class="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-950">
     <LoginDashboard @login-success="handleLogin" />
   </div>
 

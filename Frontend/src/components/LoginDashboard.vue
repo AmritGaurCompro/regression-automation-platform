@@ -17,12 +17,12 @@ function loginWithGoogle() {
 </script>
 
 <template>
-    <div class="relative flex min-h-screen w-full flex-col items-center justify-center bg-[#7c3aed] px-4 overflow-hidden">
+    <div class="relative flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-slate-900 to-slate-950 px-4 overflow-hidden">
     
 
-    <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob"></div>
-    <div class="absolute top-[20%] right-[-10%] w-96 h-96 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-2000"></div>
-    <div class="absolute bottom-[-10%] left-[30%] w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-4000"></div>
+    <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-slate-400 rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-blob"></div>
+    <div class="absolute top-[20%] right-[-10%] w-96 h-96 bg-slate-500 rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
+    <div class="absolute bottom-[-10%] left-[30%] w-96 h-96 bg-slate-600 rounded-full mix-blend-screen filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
 
     
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
@@ -47,7 +47,7 @@ function loginWithGoogle() {
         <p class="text-center text-sm text-muted-foreground">Sign in to your account</p>
         <button
           @click="loginWithGoogle"
-          class="relative z-10 flex w-full items-center justify-center gap-6 rounded-md border border-border bg-background py-2.5 text-sm font-semibold text-foreground transition-all hover:bg-muted hover:border-primary"
+          class="relative z-10 flex w-full items-center justify-center gap-6 rounded-md border border-border bg-background py-2.5 text-sm font-semibold text-foreground transition-all hover:bg-muted hover:border-slate-500"
         >
           <svg class="h-4 w-4" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -61,7 +61,7 @@ function loginWithGoogle() {
 
       <div class="text-center text-[11px] text-muted-foreground">
         By signing in you agree to our
-        <a href="#" class="text-primary hover:opacity-70">Terms &amp; Privacy</a>
+        <a href="#" class="text-slate-300 underline underline-offset-2 hover:text-white">Terms &amp; Privacy</a>
         <footer class="mt-6 text-center text-xs text-white/60">
       © 2026 The Gladiators ⚔️
     </footer>

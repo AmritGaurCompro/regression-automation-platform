@@ -323,8 +323,8 @@ defineExpose({ show })
               class="border rounded-xl p-6 cursor-pointer transition bg-[#1c2333] min-h-[160px]"
               :class="
                 importType === 'standalone'
-                  ? 'border-primary bg-muted'
-                  : 'hover:border-primary'
+                  ? 'border-slate-500 bg-muted'
+                  : 'hover:border-slate-600'
               " tabindex="0"
               @click="selectImportType('standalone')" @keypress.enter="selectImportType('standalone')"
             >
@@ -339,8 +339,8 @@ defineExpose({ show })
               class="border rounded-xl p-6 cursor-pointer transition bg-[#1c2333] min-h-[160px]"
               :class="
                 importType === 'feature'
-                  ? 'border-primary bg-muted'
-                  : 'hover:border-primary'
+                  ? 'border-slate-500 bg-muted'
+                  : 'hover:border-slate-600'
               "
               @click="selectImportType('feature')"
               @keypress="selectImportType('feature')"
@@ -366,8 +366,8 @@ defineExpose({ show })
             />
 
             <div v-if="filename" class="mt-2 flex gap-2 flex-wrap">
-              <p class="text-sm text-green-500 mt-2 text-wrap">Selected file: {{ filename }}</p>
-              <Button variant="destructive" size="icon" @click="removeSelection" class="text-red-500">
+              <p class="text-sm text-slate-300 mt-2 text-wrap">Selected file: {{ filename }}</p>
+              <Button variant="ghost" size="icon" @click="removeSelection" class="text-slate-400 hover:text-white hover:bg-[#2a3347]">
                 <Trash2 class="w-4 h-4" />
               </Button>
             </div>
@@ -400,7 +400,7 @@ defineExpose({ show })
                   <button
                     type="button"
                     class="rounded-full px-3 py-1 transition font-medium"
-                    :class="featureEntryMode === 'existing' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'"
+                    :class="featureEntryMode === 'existing' ? 'bg-[#2a3347] text-white' : 'text-muted-foreground'"
                     @click="featureEntryMode = 'existing'"
                   >
                     Pick
@@ -408,7 +408,7 @@ defineExpose({ show })
                   <button
                     type="button"
                     class="rounded-full px-3 py-1 transition font-medium"
-                    :class="featureEntryMode === 'new' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'"
+                    :class="featureEntryMode === 'new' ? 'bg-[#2a3347] text-white' : 'text-muted-foreground'"
                     @click="featureEntryMode = 'new'"
                   >
                     New
@@ -419,7 +419,7 @@ defineExpose({ show })
               <div v-if="featureEntryMode === 'existing'" class="max-h-[140px] overflow-y-auto rounded-md border border-input">
                 <select
                   v-model="selectedFeatureName"
-                  class="w-full bg-background px-3 py-2 text-sm focus-visible:outline-violet-600 focus-visible:ring-1 focus-visible:ring-ring" tabindex="0"
+                  class="w-full bg-background px-3 py-2 text-sm focus-visible:outline-slate-500 focus-visible:ring-1 focus-visible:ring-ring" tabindex="0"
                 >
                   <option value="">Choose an existing feature</option>
                   <option v-for="feature in featureOptions" :key="feature" :value="feature">
@@ -449,7 +449,7 @@ defineExpose({ show })
 
           <DialogFooter class="mt-4 gap-2 flex-col sm:flex-row sm:justify-end">
             <Button variant="outline" @click="close">Cancel</Button>
-            <Button :disabled="!canSave || hasError" @click="save">Save</Button>
+            <Button :disabled="!canSave || hasError" @click="save" class="bg-slate-100 text-slate-900 hover:bg-white">Save</Button>
           </DialogFooter>
         </template>
       </div>

@@ -1,11 +1,7 @@
 <script setup>
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+  Card, CardContent, CardDescription,
+  CardFooter, CardHeader, CardTitle
 } from '@/components/ui/card'
 import Separator from './ui/separator/Separator.vue'
 import PassFailCountCard from './PassFailCountCard.vue'
@@ -22,6 +18,7 @@ import ScrollArea from './ui/scroll-area/ScrollArea.vue'
 import { ChevronDown, ChevronRight, Play, Trash2, History, Settings } from 'lucide-vue-next'
 import Button from './ui/button/Button.vue'
 import FeatureSettingsModal from './FeatureSettingsModal.vue'
+import StatusBadge from '@/components/StatusBadge.vue'
 
 const featureSettingsRef = ref(null)
 const testStore = useTestStore()
@@ -36,14 +33,11 @@ onMounted(async () => {
     testStore.refreshTestsFromBackend(),
     testStore.refreshFeaturesFromBackend()
   ])
-  if (tests.value.length > 0) {
-    testStore.setSelectedTest(tests.value[0])
-  }
+  if (tests.value.length > 0) testStore.setSelectedTest(tests.value[0])
 })
 
-const handleOpenSettings = (feature) => {
-  featureSettingsRef.value?.show(feature)
-}
+const handleOpenSettings = (feature) => featureSettingsRef.value?.show(feature)
+
 const { filteredTests, filteredFeatures } = useTestFilter(tests, searchQuery, features)
 const { passCnt, failCnt, runCnt, queueCnt } = useTestStats(tests)
 
@@ -61,24 +55,9 @@ const toggleFeature = (featureId) => {
   expandedFeatures.value = new Set(expandedFeatures.value)
 }
 
-
-const isFeatureRunning = (feature) => {
-  return feature.tests.some(test => {
-    const liveTest = tests.value.find(t => t.id === test.id)
-
-    return ['running', 'queued'].includes(
-      liveTest?.status?.toLowerCase()
-    )
-  })
-}
 const handleRunFeature = async (featureId) => {
-  const feature = features.value.find(f => f.id === featureId)
-
-  if (!feature || isFeatureRunning(feature)) return
-
   try {
     await testStore.runFeature(featureId, testStore.testRunConfig)
-
     await testStore.refreshTestsFromBackend()
     await testStore.refreshFeaturesFromBackend()
   } catch (err) {
@@ -87,7 +66,7 @@ const handleRunFeature = async (featureId) => {
 }
 
 const handleDeleteFeature = async (featureId) => {
-  if (!confirm('Delete this feature? This will result in all tests deletion.')) return
+  if (!confirm('Delete this feature? All tests inside will also be deleted.')) return
   await testStore.deleteFeature(featureId)
   await testStore.refreshTestsFromBackend()
   await testStore.refreshFeaturesFromBackend()
@@ -104,7 +83,7 @@ const handleDeleteFeature = async (featureId) => {
 }
 
 const handleDeleteTest = async (testId) => {
-  if (!confirm('Delete this test?')) return
+  if (!confirm('Delete this test? All run history will also be deleted.')) return
   const parentFeature = features.value.find(f => f.tests.some(t => t.id === testId))
   await testStore.deleteTest(testId)
   await testStore.refreshTestsFromBackend()
@@ -113,13 +92,9 @@ const handleDeleteTest = async (testId) => {
     const featureTest = features.value.flatMap(f => f.tests)[0]
     const nextTest = tests.value.find(t => t.id === featureTest?.id) || tests.value[0]
     testStore.setSelectedTest(nextTest)
-    if (parentFeature) {
-      expandedFeatures.value.delete(parentFeature.id)
-    }
+    if (parentFeature) expandedFeatures.value.delete(parentFeature.id)
     const nextFeature = features.value.find(f => f.tests.some(t => t.id === nextTest.id))
-    if (nextFeature) {
-      expandedFeatures.value.add(nextFeature.id)
-    }
+    if (nextFeature) expandedFeatures.value.add(nextFeature.id)
     expandedFeatures.value = new Set(expandedFeatures.value)
   }
 }
@@ -130,154 +105,113 @@ const handleViewHistory = async (feature) => {
 }
 
 const getStandaloneTests = () => {
-  const featureTestIds = new Set(
-    filteredFeatures.value.flatMap(f => f.tests.map(t => t.id))
-  )
+  const featureTestIds = new Set(filteredFeatures.value.flatMap(f => f.tests.map(t => t.id)))
   return filteredTests.value.filter(t => !featureTestIds.has(t.id))
-}
-
-const statusColor = (status) => {
-  switch (status) {
-    case 'passed':  return 'text-green-500'
-    case 'failed':  return 'text-red-500'
-    case 'running': return 'text-yellow-500'
-    case 'queued':  return 'text-blue-400'
-    default:        return 'text-slate-400'
-  }
 }
 </script>
 
 <template>
-  <Card class="mt-36 lg:mt-0 w-full lg:w-[25%] rounded-lg overflow-hidden">
-    <CardHeader class="bg-[#1c2333]">
-      <CardTitle class="font-bold">Test Scripts</CardTitle>
-      <CardDescription class="text-xs text-slate-500 font-semibold">
-        {{ (filteredTests.length + filteredFeatures.reduce((acc, f) => acc + f.tests.length, 0)) }} of {{ tests.length + features.reduce((acc, f) => acc + f.tests.length, 0) }} tests
+  <Card class="mt-36 lg:mt-0 w-full lg:w-[25%] rounded-lg overflow-hidden flex flex-col">
+    <CardHeader class="bg-[#1c2333] shrink-0">
+      <CardTitle class="font-bold text-sm">Test Scripts</CardTitle>
+      <CardDescription class="text-xs text-slate-500">
+        {{ filteredTests.length + filteredFeatures.reduce((acc, f) => acc + f.tests.length, 0) }}
+        of
+        {{ tests.length + features.reduce((acc, f) => acc + f.tests.length, 0) }}
+        tests
       </CardDescription>
     </CardHeader>
     <Separator />
-    <CardContent class="bg-[#161b26]">
-      <PassFailCountCard
-        :passCnt="passCnt"
-        :failCnt="failCnt"
-        :runCnt="runCnt"
-        :queueCnt="queueCnt"
-      />
-      <ScrollArea class="h-[28rem] w-full mt-5">
-        <div class="pr-3 flex flex-col gap-2">
-          <!-- Features -->
-          <div v-if="filteredFeatures.length > 0 && getStandaloneTests().length >= 0" class="flex items-center gap-2 my-1">
-            <Separator class="flex-1" />
-            <span class="text-xs text-slate-500">Features</span>
-            <Separator class="flex-1" />
-          </div>
 
+    <CardContent class="bg-[#161b26] flex-1 overflow-hidden flex flex-col p-0">
+      <div class="px-4">
+        <PassFailCountCard
+          :passCnt="passCnt"
+          :failCnt="failCnt"
+          :runCnt="runCnt"
+          :queueCnt="queueCnt"
+        />
+      </div>
+
+      <!-- Scrollable test list — fills remaining height -->
+      <ScrollArea class="flex-1 min-h-0 mt-4">
+        <div class="px-3 pb-3 flex flex-col gap-1">
+
+          <!-- Features -->
           <div v-for="feature in filteredFeatures" :key="feature.id">
-            <!-- Feature Header -->
+            <!-- Feature header — keyboard accessible -->
             <div
+              role="button"
+              tabindex="0"
+              :aria-expanded="expandedFeatures.has(feature.id)"
               :class="[
-                'flex flex-col items-center gap-5 text-lg font-bold justify-center px-4 py-4 rounded-md cursor-pointer transition-all duration-200',
+                'flex flex-col gap-3 px-3 py-3 rounded-lg cursor-pointer transition-all duration-200 select-none',
                 expandedFeatures.has(feature.id)
-                  ? 'bg-[#1e2d45] border-l-4 border-indigo-500 shadow-md shadow-indigo-900/30'
-                  : 'bg-[#1c2333] border-l-4 border-transparent hover:bg-[#2a3347]'
+                  ? 'bg-[#2a3347] border border-slate-600/50'
+                  : 'bg-[#1c2333] border border-transparent hover:bg-[#2a3347]'
               ]"
               @click="toggleFeature(feature.id)"
+              @keydown.enter.prevent="toggleFeature(feature.id)"
+              @keydown.space.prevent="toggleFeature(feature.id)"
             >
+              <!-- Name row -->
               <div class="flex items-center gap-2">
-                <ChevronDown v-if="expandedFeatures.has(feature.id)" class="w-4 h-4 text-slate-400 font-bold" />
-                <ChevronRight v-else class="w-4 h-4 text-slate-400 font-bold" />
-                <span class="text-lg font-bold text-white">{{ feature.name }}</span>
-                <span class="text-sm text-slate-500">({{ feature.tests.length }})</span>
+                <ChevronDown v-if="expandedFeatures.has(feature.id)" class="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <ChevronRight v-else class="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <span class="text-sm font-semibold text-white truncate">{{ feature.name }}</span>
+                <span class="text-xs text-slate-600 shrink-0">({{ feature.tests.length }})</span>
               </div>
-              <div class="flex flex-wrap justify-center gap-1">
-                <!-- Run All button -->
-<Button
-  size="icon"
-  :disabled="isFeatureRunning(feature)"
-  class="h-6 w-6 bg-green-600 hover:bg-green-700
-         disabled:opacity-40 disabled:cursor-not-allowed"
-  @click.stop="handleRunFeature(feature.id)"
-  :title="isFeatureRunning(feature) ? 'Feature is running' : 'Run all tests in feature'"
->
-  <span
-    v-if="isFeatureRunning(feature)"
-    class="text-[10px] animate-pulse"
-  >
-    ⏳
-  </span>
 
-  <Play
-    v-else
-    class="w-3 h-3"
-  />
-</Button>
-                <!-- History button -->
-                <Button
-                  size="icon"
-                  class="h-6 w-6 bg-transparent hover:bg-slate-700"
-                  @click.stop="handleViewHistory(feature)"
+              <!-- Action buttons row -->
+              <div class="flex items-center gap-1.5 pl-5" @click.stop>
+                <button
+                  class="h-7 w-7 rounded flex items-center justify-center
+                         bg-[#2a3347]/50 hover:bg-[#2a3347] text-slate-400 hover:text-white
+                         transition-colors focus:outline-none focus:ring-1 focus:ring-slate-500"
+                  title="Run all tests"
+                  @click="handleRunFeature(feature.id)"
+                >
+                  <Play class="w-3 h-3" />
+                </button>
+                <button
+                  class="h-7 w-7 rounded flex items-center justify-center
+                         bg-[#2a3347]/50 hover:bg-[#2a3347] text-slate-400 hover:text-white
+                         transition-colors focus:outline-none focus:ring-1 focus:ring-slate-500"
                   title="View run history"
+                  @click="handleViewHistory(feature)"
                 >
-                  <History class="w-3 h-3 text-slate-400" />
-                </Button>
-                <!-- Delete feature button -->
-                <Button
-                  size="icon"
-                  class="h-6 w-6 bg-transparent hover:bg-red-900"
-                  @click.stop="handleDeleteFeature(feature.id)"
-                  title="Delete feature"
-                >
-                  <Trash2 class="w-3 h-3 text-red-500" />
-                </Button>
-                <!-- Settings button -->
-                <Button
-                  size="icon"
-                  class="h-6 w-6 bg-transparent hover:bg-slate-700"
-                  @click.stop="handleOpenSettings(feature)"
+                  <History class="w-3 h-3" />
+                </button>
+                <button
+                  class="h-7 w-7 rounded flex items-center justify-center
+                         bg-[#2a3347]/50 hover:bg-[#2a3347] text-slate-400 hover:text-white
+                         transition-colors focus:outline-none focus:ring-1 focus:ring-slate-500"
                   title="Feature settings"
+                  @click="handleOpenSettings(feature)"
                 >
-                  <Settings class="w-3 h-3 text-slate-400" />
-                </Button>
+                  <Settings class="w-3 h-3" />
+                </button>
+                <button
+                  class="h-7 w-7 rounded flex items-center justify-center
+                         bg-[#2a3347]/50 hover:bg-[#2a3347] text-slate-400 hover:text-white
+                         transition-colors focus:outline-none focus:ring-1 focus:ring-slate-500"
+                  title="Delete feature"
+                  @click="handleDeleteFeature(feature.id)"
+                >
+                  <Trash2 class="w-3 h-3" />
+                </button>
               </div>
             </div>
 
-            <!-- Feature Tests (collapsible) -->
-            <div
-              v-if="expandedFeatures.has(feature.id)"
-              class="relative ml-1 mt-2 flex flex-col gap-2"
-            >
-              <!-- Vertical tree line -->
-              <div
-                class="absolute left-2 top-0 bottom-0 w-px bg-indigo-500/40"
-              ></div>
-
-              <div
-                v-for="test in feature.tests"
-                :key="test.id"
-                class="relative pl-6"
-              >
-                <!-- Horizontal connector -->
-                <div
-                  class="absolute left-2 top-1/2 h-px w-4 bg-indigo-500/40"
-                ></div>
-
-                <!-- Node -->
-                <div
-                  class="absolute left-[5px] top-1/2 -translate-y-1/2
-                         h-2.5 w-2.5 rounded-full transition-all duration-200"
-                  :class="
-                    selectedTest?.id === test.id
-                      ? 'bg-violet-400 scale-125 ring-2 ring-violet-500/40 shadow-md shadow-violet-500/30'
-                      : 'bg-slate-500'
-                  "
-                ></div>
-
+            <!-- Feature tests -->
+            <div v-if="expandedFeatures.has(feature.id)" class="ml-3 mt-1 flex flex-col gap-1 border-l border-slate-800 pl-2">
+              <div v-for="test in feature.tests" :key="test.id">
                 <TestCard
                   :tests="tests.find(t => t.id === test.id) || test"
-                  @click="testStore.setSelectedTest(tests.find(t => t.id === test.id) || test)"
                   :class="selectedTest?.id === test.id
-                    ? 'border-[#6366f1] border-l-[#8b5cf6]'
+                    ? 'border-l-slate-400 bg-[#2a3347]'
                     : ''"
+                  @click="testStore.setSelectedTest(tests.find(t => t.id === test.id) || test)"
                   @action="handleRunTest(tests.find(t => t.id === test.id) || test)"
                   @delete="handleDeleteTest(test.id)"
                 />
@@ -285,32 +219,43 @@ const statusColor = (status) => {
             </div>
           </div>
 
-          <!-- Separator between features and standalone tests -->
-          <div v-if="filteredFeatures.length >= 0 && getStandaloneTests().length > 0" class="flex items-center gap-2 my-1">
+          <!-- Standalone separator -->
+          <div
+            v-if="filteredFeatures.length > 0 && getStandaloneTests().length > 0"
+            class="flex items-center gap-2 my-2"
+          >
             <Separator class="flex-1" />
-            <span class="text-xs text-slate-500">Standalone</span>
+            <span class="text-[10px] text-slate-600 uppercase tracking-widest">Standalone</span>
             <Separator class="flex-1" />
           </div>
 
-          <!-- Standalone Tests -->
+          <!-- Standalone tests -->
           <div v-for="test in getStandaloneTests()" :key="test.id">
             <TestCard
               :tests="test"
+              :class="selectedTest?.id === test.id ? 'border-l-slate-400 bg-[#2a3347]' : ''"
               @click="testStore.setSelectedTest(test)"
-              :class="selectedTest?.id === test.id ? 'border-[#6366f1] border-l-[#8b5cf6]' : ''"
               @action="handleRunTest(test)"
               @delete="handleDeleteTest(test.id)"
             />
           </div>
+
+          <!-- Empty state -->
+          <div
+            v-if="filteredTests.length === 0 && filteredFeatures.length === 0"
+            class="py-8 text-center text-slate-600 text-sm"
+          >
+            No tests match your search.
+          </div>
         </div>
       </ScrollArea>
     </CardContent>
-    <CardFooter class="bg-[#161b26]">
+
+    <CardFooter class="bg-[#161b26] border-t border-slate-800 shrink-0">
       <InformationalTip />
     </CardFooter>
   </Card>
 
-  <!-- Feature Run History Modal -->
   <FeatureRunHistory ref="featureHistoryRef" />
   <FeatureSettingsModal ref="featureSettingsRef" />
 </template>
