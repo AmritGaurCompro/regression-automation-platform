@@ -8,7 +8,7 @@ import PassFailCountCard from './PassFailCountCard.vue'
 import TestCard from './TestCard.vue'
 import InformationalTip from './InformationalTip.vue'
 import FeatureRunHistory from './FeatureRunHistory.vue'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useTestStore } from '@/stores/testStore'
 import { storeToRefs } from 'pinia'
 import { useTestFilter } from '@/composables/useTestFilter'
@@ -27,6 +27,16 @@ const { runSelectedTest } = useTestOperations()
 
 const expandedFeatures = ref(new Set())
 const featureHistoryRef = ref(null)
+
+const totalTestCount = computed(() => {
+  const featureTestIds = new Set(features.value.flatMap(f => f.tests.map(t => t.id)))
+  const standaloneCount = tests.value.filter(t => !featureTestIds.has(t.id)).length
+  return standaloneCount + features.value.reduce((a, f) => a + f.tests.length, 0)
+})
+
+const visibleTestCount = computed(() => {
+  return getStandaloneTests().length + filteredFeatures.value.reduce((a, f) => a + f.tests.length, 0)
+})
 
 onMounted(async () => {
   await Promise.all([
@@ -115,10 +125,7 @@ const getStandaloneTests = () => {
     <CardHeader class="bg-[#1c2333] shrink-0">
       <CardTitle class="font-bold text-sm">Test Scripts</CardTitle>
       <CardDescription class="text-xs text-slate-500">
-        {{ filteredTests.length + filteredFeatures.reduce((acc, f) => acc + f.tests.length, 0) }}
-        of
-        {{ tests.length + features.reduce((acc, f) => acc + f.tests.length, 0) }}
-        tests
+  {{ visibleTestCount }} of {{ totalTestCount }} tests
       </CardDescription>
     </CardHeader>
     <Separator />

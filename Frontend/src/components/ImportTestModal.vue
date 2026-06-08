@@ -449,7 +449,7 @@ defineExpose({ show })
 
           <DialogFooter class="mt-4 gap-2 flex-col sm:flex-row sm:justify-end">
             <Button variant="outline" @click="close">Cancel</Button>
-            <Button :disabled="!canSave || hasError" @click="save" class="bg-slate-100 text-slate-900 hover:bg-white">Save</Button>
+            <Button :disabled="!canSave || hasError" @click="save" class="bg-slate-100 text-slate-900 hover:bg-white focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:outline-none">Save</Button>
           </DialogFooter>
         </template>
       </div>

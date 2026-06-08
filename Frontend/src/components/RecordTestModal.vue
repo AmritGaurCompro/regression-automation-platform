@@ -37,6 +37,7 @@
         <Button
           :disabled="!!error || !fileName"
           @click="save"
+          class="focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:outline-none"
         >
           Save
         </Button>

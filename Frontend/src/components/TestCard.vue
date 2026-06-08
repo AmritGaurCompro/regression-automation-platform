@@ -90,7 +90,7 @@ const queuePosition = computed(() => {
         size="sm"
         :disabled="isThisTestBusy"
         class="h-8 px-3 text-xs bg-slate-100 hover:bg-white text-slate-900
-               disabled:opacity-40 disabled:cursor-not-allowed"
+               disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:outline-none"
         @click.stop="emit('action')"
       >
         <span v-if="tests?.status === 'running'" class="flex items-center gap-1">

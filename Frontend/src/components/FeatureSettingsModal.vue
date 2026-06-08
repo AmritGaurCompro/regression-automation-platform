@@ -316,7 +316,7 @@ const isFeatureRunning = computed(() => {
           <Button
             :disabled="isFeatureRunning"
             class="inline-flex items-center gap-2 bg-slate-100 hover:bg-white text-slate-900 font-medium
-                   disabled:opacity-40 disabled:cursor-not-allowed px-6"
+                   disabled:opacity-40 disabled:cursor-not-allowed px-6 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:outline-none"
             @click="runAllTests"
           >
             <template v-if="isFeatureRunning">

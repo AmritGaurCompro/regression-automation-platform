@@ -64,7 +64,7 @@
         :disabled="isThisTestBusy"
         class="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium
                bg-slate-100 text-slate-900 hover:bg-white transition-colors
-               disabled:opacity-40 disabled:cursor-not-allowed"
+               disabled:opacity-40 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:outline-none"
         @click="runTest"
       >
         <template v-if="isThisTestBusy">
