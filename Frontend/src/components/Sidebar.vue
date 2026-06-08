@@ -80,6 +80,7 @@ const handleDeleteFeature = async (featureId) => {
   await testStore.deleteFeature(featureId)
   await testStore.refreshTestsFromBackend()
   await testStore.refreshFeaturesFromBackend()
+  alert('Feature deleted successfully.')
   if (tests.value.length > 0) {
     const featureTest = features.value.flatMap(f => f.tests)[0]
     const nextTest = featureTest ? tests.value.find(t => t.id === featureTest.id) : tests.value[0]
@@ -98,6 +99,7 @@ const handleDeleteTest = async (testId) => {
   await testStore.deleteTest(testId)
   await testStore.refreshTestsFromBackend()
   await testStore.refreshFeaturesFromBackend()
+  alert('Test deleted successfully.')
   if (tests.value.length > 0) {
     const featureTest = features.value.flatMap(f => f.tests)[0]
     const nextTest = tests.value.find(t => t.id === featureTest?.id) || tests.value[0]
@@ -121,7 +123,7 @@ const getStandaloneTests = () => {
 </script>
 
 <template>
-  <Card class="mt-36 lg:mt-0 w-full lg:w-[25%] rounded-lg overflow-hidden flex flex-col">
+  <Card class="w-full lg:w-[25%] rounded-lg overflow-hidden flex flex-col">
     <CardHeader class="bg-[#1c2333] shrink-0">
       <CardTitle class="font-bold text-sm">Test Scripts</CardTitle>
       <CardDescription class="text-xs text-slate-500">
@@ -170,7 +172,7 @@ const getStandaloneTests = () => {
               </div>
 
               <!-- Action buttons row -->
-              <div class="flex items-center gap-1.5 pl-5" @click.stop>
+              <div class="flex items-center gap-1.5 pl-5" @click.stop @keydown.enter.stop @keydown.space.stop>
                 <button
                   class="h-7 w-7 rounded flex items-center justify-center
                          bg-[#2a3347]/50 hover:bg-[#2a3347] text-slate-400 hover:text-white

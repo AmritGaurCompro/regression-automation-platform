@@ -103,7 +103,7 @@ npx playwright codegen --output ~/Desktop/my-test.spec.js`,
 </script>
 
 <template>
-  <nav class="fixed top-0 left-0 right-0 z-50 bg-[#161b26] border-b border-slate-800">
+  <nav class="sticky top-0 z-50 bg-[#161b26] border-b border-slate-800">
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 px-4 py-3">
 
       <!-- Brand -->
@@ -119,7 +119,7 @@ npx playwright codegen --output ~/Desktop/my-test.spec.js`,
       </div>
 
       <!-- Search -->
-      <div class="relative flex-1 max-w-xl">
+      <div class="relative flex-1 max-w-xl w-full mx-auto">
         <Search class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 pointer-events-none" />
         <Input
           v-model="searchQuery"
@@ -129,31 +129,34 @@ npx playwright codegen --output ~/Desktop/my-test.spec.js`,
       </div>
 
       <!-- Actions -->
-      <div class="flex items-center gap-2 shrink-0">
-        <!-- Local Setup — no pulse, shows confirmation feedback -->
-        <Button
-          class="inline-flex items-center gap-2 px-3 py-2 text-sm bg-[#1c2333] border border-slate-700 text-white
-                 hover:bg-[#2a3347] hover:border-slate-600 transition-all duration-200"
-          :class="downloadDone ? 'border-slate-500 text-white' : ''"
-          @click="downloadLocalSetup"
-        >
-          <Check v-if="downloadDone" class="w-4 h-4" />
-          <Settings v-else class="w-4 h-4" />
-          {{ downloadLabel }}
-        </Button>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-2 shrink-0">
+        <!-- Local Setup + Import — combined on one row -->
+        <div class="flex items-center justify-center gap-2">
+          <!-- Local Setup — no pulse, shows confirmation feedback -->
+          <Button
+            class="inline-flex items-center justify-center gap-2 px-3 py-2 text-sm bg-[#1c2333] border border-slate-700 text-white
+                   hover:bg-[#2a3347] hover:border-slate-600 transition-all duration-200"
+            :class="downloadDone ? 'border-slate-500 text-white' : ''"
+            @click="downloadLocalSetup"
+          >
+            <Check v-if="downloadDone" class="w-4 h-4" />
+            <Settings v-else class="w-4 h-4" />
+            {{ downloadLabel }}
+          </Button>
 
-        <!-- Import — single highlight, no pulse -->
-        <Button
-          class="inline-flex items-center gap-2 px-3 py-2 text-sm bg-slate-100 hover:bg-white
-                 text-slate-900 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:outline-none"
-          @click="openImportModal"
-        >
-          <Download class="w-4 h-4" />
-          Import
-        </Button>
-        <ImportTestModal ref="importModalRef" />
+          <!-- Import — single highlight, no pulse -->
+          <Button
+            class="inline-flex items-center justify-center gap-2 px-3 py-2 text-sm bg-slate-100 hover:bg-white
+                   text-slate-900 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:outline-none"
+            @click="openImportModal"
+          >
+            <Download class="w-4 h-4" />
+            Import
+          </Button>
+          <ImportTestModal ref="importModalRef" />
+        </div>
 
-        <!-- Sign out -->
+        <!-- Sign out — own row on smaller viewports -->
         <Button
           class="px-3 py-2 text-sm bg-[#1c2333] border border-slate-700
                  text-slate-300 hover:bg-[#2a3347] hover:text-white hover:border-slate-600 transition-all duration-200"

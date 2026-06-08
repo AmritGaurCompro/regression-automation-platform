@@ -79,10 +79,8 @@ async function handleSignout() {
 
   <!-- Authenticated -->
   <template v-else>
-    <header>
-      <Navbar :user="user" @signout="handleSignout" />
-    </header>
-    <div class="p-4 pt-36 md:pt-24 lg:pt-36 xl:pt-28 overflow-y-auto z-40">
+    <Navbar :user="user" @signout="handleSignout" />
+    <div class="p-4 z-40">
       <div class="flex flex-col items-start h-fit lg:flex-row">
         <Sidebar />
         <HeroContent />

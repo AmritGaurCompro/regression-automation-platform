@@ -75,7 +75,7 @@ const queuePosition = computed(() => {
       </div>
     </CardContent>
 
-    <CardFooter class="px-4 pb-3 flex justify-end gap-2">
+    <CardFooter class="px-4 pb-3 flex flex-wrap justify-end gap-2">
       <Button
         size="sm"
         variant="ghost"
