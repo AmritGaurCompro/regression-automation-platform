@@ -143,6 +143,16 @@ async function refreshTestsFromBackend() {
     }
   }
 
+async function deleteTestRun(testId, testRunId) {
+  try {
+    await axios.delete(`${API_BASE_URL}/api/tests/${testId}/test_runs/${testRunId}`)
+    testRuns.value = testRuns.value.filter(tr => tr.id !== testRunId)
+  } catch (err) {
+    console.error("Failed to delete test run:", err)
+    throw err
+  }
+}
+
 async function saveTestMeta(testId, payload) {
   try {
     if (payload.tags !== undefined) {
@@ -307,6 +317,7 @@ async function refreshSingleTest(testId) {
     deleteFeature,
     refreshSingleTest,
     deleteTest,
+    deleteTestRun,
     saveTestMeta,
     fetchTestRuns,
     syncTagsToTestsList,

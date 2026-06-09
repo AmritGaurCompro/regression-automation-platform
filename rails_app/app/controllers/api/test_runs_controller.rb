@@ -56,6 +56,14 @@ end
       status: test_run.status
     }, status: :created
   end
+
+  def destroy
+    test_run = TestRun.find(params[:id])
+    test_run.destroy
+    render json: { message: 'Test run deleted' }, status: :ok
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Test run not found' }, status: :not_found
+  end
   
   def any_running
   render json: {

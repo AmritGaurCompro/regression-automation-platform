@@ -14,7 +14,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { History, FlaskConical, AlertTriangle, Image, Video, Search, FileText } from 'lucide-vue-next'
+import { History, FlaskConical, AlertTriangle, Image, Video, Search, FileText, Trash2 } from 'lucide-vue-next'
+import { useTestStore } from '@/stores/testStore'
+
+const testStore = useTestStore()
 
 const props = defineProps({
   runs: {
@@ -34,6 +37,21 @@ const openModal = (run) => {
 const closeModal = () => {
   modalOpen.value = false
   selectedRun.value = null
+}
+
+const handleDeleteTestRun = async (testRunId) => {
+  if (!confirm('Delete this test run?')) return
+  
+  try {
+    if (testStore.selectedTest?.id) {
+      await testStore.deleteTestRun(testStore.selectedTest.id, testRunId)
+      alert('Test run deleted successfully.')
+      closeModal()
+    }
+  } catch (err) {
+    console.error('Failed to delete test run:', err)
+    alert('Failed to delete test run. Please try again.')
+  }
 }
 
 const statusClass = (status) => {
@@ -63,7 +81,7 @@ const artifactIcon = (kind) => {
 
       <CardContent class="p-0">
         <div
-          class="hidden md:grid grid-cols-4 px-6 py-3
+          class="hidden md:grid grid-cols-5 px-6 py-3
                  text-xs font-semibold uppercase
                  text-slate-400
                  border-b border-slate-800 bg-[#1c2333]"
@@ -71,31 +89,44 @@ const artifactIcon = (kind) => {
           <span>Run ID</span>
           <span>Status</span>
           <span>Environment</span>
-          <span class="text-right">Duration</span>
+          <span>Duration</span>
+          <span class="text-right">Action</span>
         </div>
 
         <div
           v-for="run in runs"
           :key="run.id"
-          class="border-b border-slate-800 last:border-none cursor-pointer"
-          @click="openModal(run)"
+          class="border-b border-slate-800 last:border-none"
         >
           <!-- Desktop -->
           <div
-            class="hidden md:grid grid-cols-4 px-6 py-4
+            class="hidden md:grid grid-cols-5 px-6 py-4
                    items-center
-                   hover:bg-[#161b26]/40 transition"
+                   hover:bg-[#161b26]/40 transition cursor-pointer"
+            @click="openModal(run)"
           >
             <span class="font-medium text-white">{{ run.id }}</span>
             <Badge :class="statusClass(run.status)" class="w-fit">
               {{ run.status.toUpperCase() }}
             </Badge>
             <span class="text-slate-200">{{ run.environment }}</span>
-            <span class="text-right text-slate-200">{{ run.duration }}</span>
+            <span class="text-slate-200">{{ run.duration }}</span>
+            <div class="flex justify-end">
+              <Button
+                size="sm"
+                variant="ghost"
+                class="h-8 px-3 text-xs text-slate-400 hover:text-white hover:bg-[#2a3347]"
+                @click.stop="handleDeleteTestRun(run.id)"
+                title="Delete if test run appears stuck - retry again"
+              >
+                <Trash2 class="w-3 h-3 mr-1" />
+                Delete
+              </Button>
+            </div>
           </div>
 
           <!-- Mobile -->
-          <div class="md:hidden px-4 py-4 space-y-2">
+          <div class="md:hidden px-4 py-4 space-y-2" @click="openModal(run)">
             <div class="flex items-center justify-between">
               <span class="font-medium text-white">{{ run.id }}</span>
               <Badge :class="statusClass(run.status)">
@@ -109,6 +140,18 @@ const artifactIcon = (kind) => {
             <div class="flex justify-between text-sm text-slate-300">
               <span>Duration</span>
               <span>{{ run.duration }}</span>
+            </div>
+            <div class="flex justify-end pt-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                class="h-8 px-3 text-xs text-slate-400 hover:text-white hover:bg-[#2a3347]"
+                @click.stop="handleDeleteTestRun(run.id)"
+                title="Delete if test run appears stuck - retry again"
+              >
+                <Trash2 class="w-3 h-3 mr-1" />
+                Delete
+              </Button>
             </div>
           </div>
         </div>
@@ -212,6 +255,20 @@ const artifactIcon = (kind) => {
         <pre class="text-xs text-red-300 whitespace-pre-wrap overflow-auto max-h-32 break-all">{{
           selectedRun.artifacts.find(a => a.kind === 'error_log')?.metadata
         }}</pre>
+      </div>
+
+      <!-- Delete Button -->
+      <div class="flex justify-end pt-3 border-t border-slate-800">
+        <Button
+          size="sm"
+          variant="ghost"
+          class="h-8 px-3 text-xs text-slate-400 hover:text-white hover:bg-[#2a3347]"
+          @click="handleDeleteTestRun(selectedRun.id)"
+          title="Delete if test run appears stuck - retry again"
+        >
+          <Trash2 class="w-3 h-3 mr-1" />
+          Delete
+        </Button>
       </div>
 
     </div>

@@ -20,7 +20,7 @@ Rails.application.routes.draw do
     resources :tests do
       get  'script',  to: 'tests#script',        on: :member
       post 'vnc_url', to: 'tests#update_vnc_url', on: :member
-      resources :test_runs, only: [:index, :create, :show] do
+      resources :test_runs, only: [:index, :create, :show, :destroy] do
         post 'artifacts', to: 'test_runs#receive_artifacts', on: :member
         post 'vnc_url',   to: 'test_runs#update_vnc_url',    on: :member
       end
