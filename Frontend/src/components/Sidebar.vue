@@ -76,11 +76,13 @@ const handleRunFeature = async (featureId) => {
 }
 
 const handleDeleteFeature = async (featureId) => {
-  if (!confirm('Delete this feature? All tests inside will also be deleted.')) return
+  const feature = features.value.find(f => f.id === featureId)
+  if (!feature) return
+  if (!confirm(`Delete feature ${feature.name}? All tests inside will also be deleted.`)) return
   await testStore.deleteFeature(featureId)
   await testStore.refreshTestsFromBackend()
   await testStore.refreshFeaturesFromBackend()
-  alert('Feature deleted successfully.')
+  alert(`Feature ${feature.name} deleted successfully.`)
   if (tests.value.length > 0) {
     const featureTest = features.value.flatMap(f => f.tests)[0]
     const nextTest = featureTest ? tests.value.find(t => t.id === featureTest.id) : tests.value[0]
@@ -94,12 +96,13 @@ const handleDeleteFeature = async (featureId) => {
 }
 
 const handleDeleteTest = async (testId) => {
-  if (!confirm('Delete this test? All run history will also be deleted.')) return
+  const test = tests.value.find(t => t.id === testId)
+  if (!confirm(`Delete test ${test.title?.split('_').slice(0, -1).join('_') || test.title}? All run history will also be deleted.`)) return
   const parentFeature = features.value.find(f => f.tests.some(t => t.id === testId))
   await testStore.deleteTest(testId)
   await testStore.refreshTestsFromBackend()
   await testStore.refreshFeaturesFromBackend()
-  alert('Test deleted successfully.')
+  alert(`Test ${test.title?.split('_').slice(0, -1).join('_') || test.title} deleted successfully.`)
   if (tests.value.length > 0) {
     const featureTest = features.value.flatMap(f => f.tests)[0]
     const nextTest = tests.value.find(t => t.id === featureTest?.id) || tests.value[0]
