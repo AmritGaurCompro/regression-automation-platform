@@ -38,7 +38,7 @@ onMounted(async () => {
       startBackgroundPolling() // ← only starts when logged in
     }
   } catch {
-    console.log('Not authenticated Sarthak')
+    console.log('Not authenticated')
   } finally {
     loading.value = false
   }
