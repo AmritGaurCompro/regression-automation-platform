@@ -126,7 +126,7 @@ const getStandaloneTests = () => {
 </script>
 
 <template>
-  <Card class="w-full lg:w-[25%] rounded-lg overflow-hidden flex flex-col">
+  <Card class="w-full lg:w-[25%] rounded-lg overflow-hidden flex flex-col lg:h-[calc(100vh-7rem)] lg:min-h-0">
     <CardHeader class="bg-[#1c2333] shrink-0">
       <CardTitle class="font-bold text-sm">Test Scripts</CardTitle>
       <CardDescription class="text-xs text-slate-500">
@@ -135,7 +135,7 @@ const getStandaloneTests = () => {
     </CardHeader>
     <Separator />
 
-    <CardContent class="bg-[#161b26] flex-1 overflow-hidden flex flex-col p-0">
+    <CardContent class="bg-[#161b26] flex-1 overflow-hidden flex flex-col p-0 min-h-0">
       <div class="px-4">
         <PassFailCountCard
           :passCnt="passCnt"
@@ -146,7 +146,7 @@ const getStandaloneTests = () => {
       </div>
 
       <!-- Scrollable test list — fills remaining height -->
-      <ScrollArea class="flex-1 min-h-0 mt-4">
+      <ScrollArea class="flex-1 min-h-0 mt-4 h-full">
         <div class="px-3 pb-3 flex flex-col gap-1">
 
           <!-- Features -->
